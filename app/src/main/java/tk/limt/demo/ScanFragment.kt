@@ -2,6 +2,7 @@ package tk.limt.demo
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Intent
@@ -92,9 +93,7 @@ class ScanFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener,
         view: View, holder: Holder<ItemScanBinding>, item: ScanResult
     ) {
         if (view == holder.binding.connect) {
-            (activity as OnItemClickListener<ItemScanBinding, ScanResult>).onItemClick(
-                view, holder, item
-            )
+            (activity as OnTabChangeListener<BluetoothDevice>).onTabChange(item.device, true)
         }
     }
 

@@ -3,15 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/progress"
-        android:title="@string/loading"
-        android:visible="false"
-        app:actionViewClass="android.widget.ProgressBar"
+        android:id="@+id/connect"
+        android:title="@string/connect"
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/connect"
-        android:title="@string/connect"
-        android:visible="false"
+        android:id="@+id/close"
+        android:title="@string/close"
         app:showAsAction="always" />
 </menu>

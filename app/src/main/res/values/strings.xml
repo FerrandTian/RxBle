@@ -9,6 +9,7 @@
     <string name="search">Search</string>
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
+    <string name="close">Close</string>
     <string name="loading">Loading</string>
     <string name="unknown_service">Unknown Service</string>
     <string name="primary_service">Primary service</string>

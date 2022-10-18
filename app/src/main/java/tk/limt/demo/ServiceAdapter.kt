@@ -22,6 +22,7 @@ class ServiceAdapter(
         holder.binding.uuid.text = item.uuid.toString()
         holder.binding.type.setText(if (item.type == BluetoothGattService.SERVICE_TYPE_PRIMARY) R.string.primary_service else R.string.secondary_service)
         holder.binding.characteristics.removeAllViews()
+        holder.binding.characteristics.visibility = View.GONE
         if (item.characteristics.isNotEmpty()) {
             item.characteristics.forEach { ch ->
                 val chBinding = ItemCharacteristicBinding.inflate(
