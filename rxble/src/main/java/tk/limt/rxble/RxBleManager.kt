@@ -12,17 +12,12 @@ import android.content.Context
 import io.reactivex.rxjava3.core.Observable
 import tk.limt.rxble.model.RxScanResult
 
-class RxBleManager {
-    private lateinit var context: Context
-    private lateinit var manager: BluetoothManager
-    private lateinit var adapter: BluetoothAdapter
+class RxBleManager(var context: Context) {
+    private var manager: BluetoothManager = context.getSystemService(
+        Context.BLUETOOTH_SERVICE
+    ) as BluetoothManager
+    private var adapter: BluetoothAdapter = manager.adapter
     private var bleMap: MutableMap<String, RxBle> = HashMap()
-
-    fun init(context: Context) {
-        this.context = context
-        this.manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        this.adapter = manager.adapter
-    }
 
     @SuppressLint("MissingPermission")
     fun getConnectionState(device: BluetoothDevice) = manager.getConnectionState(
@@ -41,13 +36,14 @@ class RxBleManager {
 
     fun scan(filters: List<ScanFilter>?, settings: ScanSettings?) = Observable.create(
         RxBleScanOnSubscribe(adapter.bluetoothLeScanner, filters, settings)
-    ).ofType(RxScanResult.ScanResult::class.java)
+    ).ofType(RxScanResult.ScanResult::class.java).map { it.result }
 
     fun create(address: String, autoConnect: Boolean = false) = create(
         getRemoteDevice(address), autoConnect
     )
 
     fun create(device: BluetoothDevice, autoConnect: Boolean = false): RxBle {
+        check(bleMap.size >= 8) { "A maximum of 8 connections are supported" }
         val ble = RxBle(context, device, autoConnect)
         bleMap[device.address] = ble
         return ble
@@ -91,8 +87,11 @@ class RxBleManager {
 
     companion object {
         @JvmStatic
-        val instance: RxBleManager by lazy(mode = LazyThreadSafetyMode.SYNCHRONIZED) {
-            RxBleManager()
+        lateinit var instance: RxBleManager
+
+        @JvmStatic
+        fun init(context: Context) {
+            instance = RxBleManager(context)
         }
     }
 }

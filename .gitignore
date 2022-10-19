@@ -11,6 +11,8 @@
 /captures
 .externalNativeBuild
 .cxx
+/gradlew
+/gradlew.bat
 
 # Gradle files
 .gradle/

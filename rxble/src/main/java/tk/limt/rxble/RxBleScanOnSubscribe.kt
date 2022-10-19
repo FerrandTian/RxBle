@@ -6,7 +6,7 @@ import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import java.lang.Exception
 
-class RxBleScanOnSubscribe(
+internal class RxBleScanOnSubscribe(
     private val scanner: BluetoothLeScanner,
     private val filters: List<ScanFilter>? = null,
     private val settings: ScanSettings? = ScanSettings.Builder().build()

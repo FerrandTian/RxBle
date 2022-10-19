@@ -4,7 +4,7 @@ import tk.limt.utils.hex
 import java.nio.ByteBuffer
 import kotlin.math.min
 
-class BytePack(val id: Int, val data: ByteArray) {
+internal class BytePack(val id: Int, val data: ByteArray) {
     val buffer: ByteBuffer = ByteBuffer.wrap(data)
     val hasRemaining: Boolean
         get() = buffer.hasRemaining()

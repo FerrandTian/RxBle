@@ -7,6 +7,6 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        RxBleManager.instance.init(this)
+        RxBleManager.init(this)
     }
 }

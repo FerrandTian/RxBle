@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothProfile
 
-open class RxGatt(
+internal open class RxGatt(
     val gatt: BluetoothGatt,
     val status: Int = BluetoothGatt.GATT_SUCCESS,
     val state: Int = BluetoothProfile.STATE_CONNECTED

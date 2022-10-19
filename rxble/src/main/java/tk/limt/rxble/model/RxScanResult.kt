@@ -1,6 +1,6 @@
 package tk.limt.rxble.model
 
-open class RxScanResult {
+internal open class RxScanResult {
 
     class ScanResult(val callbackType: Int, val result: android.bluetooth.le.ScanResult) :
         RxScanResult()

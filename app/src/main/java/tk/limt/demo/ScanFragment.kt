@@ -77,7 +77,7 @@ class ScanFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener,
             ).observeOn(AndroidSchedulers.mainThread()).doOnDispose {
                 _binding?.refresh?.isRefreshing = false
             }.subscribe {
-                adapter.put(it.result)
+                adapter.put(it)
             }
             disposableTimer?.dispose()
             disposableTimer = Completable.complete().delay(5, TimeUnit.SECONDS).subscribe {
