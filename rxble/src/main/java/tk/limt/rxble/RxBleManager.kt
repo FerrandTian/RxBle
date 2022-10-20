@@ -43,7 +43,7 @@ class RxBleManager(var context: Context) {
     )
 
     fun create(device: BluetoothDevice, autoConnect: Boolean = false): RxBle {
-        check(bleMap.size >= 8) { "A maximum of 8 connections are supported" }
+        check(bleMap.size <= 8) { "A maximum of 8 connections are supported" }
         val ble = RxBle(context, device, autoConnect)
         bleMap[device.address] = ble
         return ble

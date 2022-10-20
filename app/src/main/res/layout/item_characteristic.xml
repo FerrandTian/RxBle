@@ -17,6 +17,39 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageView
+        android:id="@+id/subscribe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/ripple_transparent_light"
+        android:clickable="true"
+        android:src="@drawable/ic_download_multiple_24"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/write"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/ripple_transparent_light"
+        android:clickable="true"
+        android:src="@drawable/ic_download_24"
+        app:layout_constraintEnd_toStartOf="@id/subscribe"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/read"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/ripple_transparent_light"
+        android:clickable="true"
+        android:src="@drawable/ic_upload_24"
+        app:layout_constraintEnd_toStartOf="@id/write"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
         android:id="@+id/tv_uuid"
         android:layout_width="wrap_content"
