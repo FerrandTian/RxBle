@@ -92,7 +92,7 @@ class ScanFragment : Fragment(), SwipeRefreshLayout.OnRefreshListener,
     override fun onItemClick(
         view: View, holder: Holder<ItemScanBinding>, item: ScanResult
     ) {
-        if (view == holder.binding.connect) {
+        if (view == holder.vb.connect) {
             (activity as OnTabChangeListener<BluetoothDevice>).onTabChange(item.device, true)
         }
     }

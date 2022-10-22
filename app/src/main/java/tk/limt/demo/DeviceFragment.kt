@@ -31,7 +31,7 @@ class DeviceFragment : Fragment(), OnItemClickListener<ItemServiceBinding, Bluet
     private var _binding: RefreshBinding? = null
     private val binding get() = _binding!!
     private val aty get() = requireActivity() as AppCompatActivity
-    private val adapter: ServiceAdapter = ServiceAdapter(this)
+    private lateinit var adapter: ServiceAdapter
     private var mnConnect: MenuItem? = null
     private val launcherPermissions = registerForActivityResult(RequestMultiplePermissions()) {}
     private val launcherBluetooth = registerForActivityResult(StartActivityForResult()) {}
@@ -51,12 +51,13 @@ class DeviceFragment : Fragment(), OnItemClickListener<ItemServiceBinding, Bluet
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
+        device = requireArguments().getParcelable("ARG_DATA")!!
+        ble = bleManager.obtain(device.address)
         binding.recycler.addItemDecoration(
             DividerItemDecoration(aty, DividerItemDecoration.HORIZONTAL)
         )
+        adapter = ServiceAdapter(ble)
         binding.recycler.adapter = adapter
-        device = requireArguments().getParcelable("ARG_DATA")!!
-        ble = bleManager.obtain(device.address)
         disState = ble.connectionState().observeOn(AndroidSchedulers.mainThread()).subscribe {
             updateUiWithData(it)
         }

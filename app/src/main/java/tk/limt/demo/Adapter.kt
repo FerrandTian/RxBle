@@ -13,7 +13,7 @@ import java.lang.reflect.ParameterizedType
  */
 abstract class Adapter<B : ViewBinding, T>(
     protected val items: MutableList<T> = ArrayList(),
-    private var clickListener: OnItemClickListener<B, T>? = null,
+    protected var clickListener: OnItemClickListener<B, T>? = null,
 ) : RecyclerView.Adapter<Holder<B>>(), MutableList<T> by items {
     protected lateinit var context: Context
 

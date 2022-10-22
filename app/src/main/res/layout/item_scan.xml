@@ -2,14 +2,13 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/listChoiceBackgroundIndicator"
     android:padding="?attr/listPreferredItemPaddingStart">
 
     <TextView
-        android:id="@+id/name"
+        android:id="@+id/tv_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="N/A"
@@ -18,16 +17,16 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/address"
+        android:id="@+id/tv_address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?attr/textAppearanceListItemSecondary"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/name"
+        app:layout_constraintTop_toBottomOf="@id/tv_name"
         tools:text="A0:B1:C2:D3:E4:F5" />
 
     <TextView
-        android:id="@+id/rssi"
+        android:id="@+id/tv_rssi"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -35,8 +34,8 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         app:drawableStartCompat="@drawable/ic_signal_cellular_4_bar_16"
         app:drawableTint="?android:attr/textColorTertiary"
-        app:layout_constraintBaseline_toBaselineOf="@id/address"
-        app:layout_constraintStart_toEndOf="@id/address"
+        app:layout_constraintBaseline_toBaselineOf="@id/tv_address"
+        app:layout_constraintStart_toEndOf="@id/tv_address"
         tools:text="-100 dBm" />
 
     <Button

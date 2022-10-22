@@ -6,7 +6,7 @@ import androidx.viewbinding.ViewBinding
 /**
  * @author tianfeng
  */
-class Holder<B : ViewBinding>(@JvmField val binding: B) : RecyclerView.ViewHolder(binding.root) {
+class Holder<B : ViewBinding>(@JvmField val vb: B) : RecyclerView.ViewHolder(vb.root) {
 
     companion object {
         fun type(clazz: Class<out ViewBinding>?): Int {

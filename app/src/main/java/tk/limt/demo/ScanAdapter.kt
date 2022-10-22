@@ -27,14 +27,14 @@ class ScanAdapter(
     override fun onBindViewHolder(holder: Holder<ItemScanBinding>, position: Int) {
         val item = list[position]
         item.device?.let {
-            holder.binding.address.text = it.address
+            holder.vb.tvAddress.text = it.address
         }
-        holder.binding.name.text = item.deviceName ?: "N/A"
-        holder.binding.rssi.text = "${item.rssi} dBm"
+        holder.vb.tvName.text = item.deviceName ?: "N/A"
+        holder.vb.tvRssi.text = "${item.rssi} dBm"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            holder.binding.connect.visibility = if (item.isConnectable) View.VISIBLE else View.GONE
+            holder.vb.connect.visibility = if (item.isConnectable) View.VISIBLE else View.GONE
         }
-        setClickListener(holder, item, holder.itemView, holder.binding.connect)
+        setClickListener(holder, item, holder.itemView, holder.vb.connect)
     }
 
     fun put(element: ScanResult) {

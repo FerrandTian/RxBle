@@ -88,6 +88,12 @@ class RxBle(
         check(source.gatt.discoverServices()) { "discoverServices failed" }
     }
 
+    fun value(characteristic: BluetoothGattCharacteristic) = bleObservable.ofType(
+        CharacteristicChanged::class.java
+    ).filter { it.characteristic.uuid == characteristic.uuid }.map {
+        it.characteristic.value
+    }
+
     @SuppressLint("MissingPermission")
     fun read(characteristic: BluetoothGattCharacteristic) = bleObservable.ofType(
         CharacteristicRead::class.java
@@ -104,30 +110,6 @@ class RxBle(
         it.characteristic
     }.firstOrError().doOnSubscribe {
         check(source.gatt.writeCharacteristic(characteristic)) { "writeCharacteristic failed" }
-    }
-
-    @SuppressLint("MissingPermission")
-    fun read(descriptor: BluetoothGattDescriptor) = bleObservable.ofType(
-        DescriptorRead::class.java
-    ).filter { it.descriptor.uuid == descriptor.uuid }.map {
-        it.descriptor
-    }.firstOrError().doOnSubscribe {
-        check(source.gatt.readDescriptor(descriptor)) { "readDescriptor failed" }
-    }
-
-    @SuppressLint("MissingPermission")
-    fun write(descriptor: BluetoothGattDescriptor) = bleObservable.ofType(
-        DescriptorWrite::class.java
-    ).filter { it.descriptor.uuid == descriptor.uuid }.firstOrError().flatMapCompletable {
-        Completable.complete()
-    }.doOnSubscribe {
-        check(source.gatt.writeDescriptor(descriptor)) { "writeDescriptor failed" }
-    }
-
-    fun value(characteristic: BluetoothGattCharacteristic) = bleObservable.ofType(
-        CharacteristicChanged::class.java
-    ).filter { it.characteristic.uuid == characteristic.uuid }.map {
-        it.characteristic.value
     }
 
     @SuppressLint("MissingPermission")
@@ -150,6 +132,38 @@ class RxBle(
     }.doOnSubscribe {
         check(source.gatt.executeReliableWrite()) { "executeReliableWrite failed" }
     })
+
+    @SuppressLint("MissingPermission")
+    fun read(descriptor: BluetoothGattDescriptor) = bleObservable.ofType(
+        DescriptorRead::class.java
+    ).filter { it.descriptor.uuid == descriptor.uuid }.map {
+        it.descriptor
+    }.firstOrError().doOnSubscribe {
+        check(source.gatt.readDescriptor(descriptor)) { "readDescriptor failed" }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun write(descriptor: BluetoothGattDescriptor) = bleObservable.ofType(
+        DescriptorWrite::class.java
+    ).filter { it.descriptor.uuid == descriptor.uuid }.map {
+        it.descriptor
+    }.firstOrError().doOnSubscribe {
+        check(source.gatt.writeDescriptor(descriptor)) { "writeDescriptor failed" }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun setNotification(descriptor: BluetoothGattDescriptor) = write(
+        descriptor
+    ).doOnSubscribe {
+        check(
+            source.gatt.setCharacteristicNotification(
+                descriptor.characteristic,
+                BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE.contentEquals(descriptor.value)
+            )
+        ) {
+            "setCharacteristicNotification failed"
+        }
+    }
 
     @SuppressLint("MissingPermission")
     fun readRemoteRssi() = bleObservable.ofType(ReadRemoteRssi::class.java).map {
