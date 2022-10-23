@@ -1,0 +1,49 @@
+<resources>
+
+    <!--  通用词组  -->
+    <string name="tt_about">关于</string>
+    <string name="tt_agree">同意</string>
+    <string name="tt_add">添加</string>
+    <string name="tt_all">全部</string>
+    <string name="tt_cancel">取消</string>
+    <string name="tt_complete">完成</string>
+    <string name="tt_delete">删除</string>
+    <string name="tt_device">设备</string>
+    <string name="tt_disagree">不同意</string>
+    <string name="tt_done">完成</string>
+    <string name="tt_download">下载</string>
+    <string name="tt_edit">编辑</string>
+    <string name="tt_export">导出</string>
+    <string name="tt_female">女</string>
+    <string name="tt_go_settings">去设置</string>
+    <string name="tt_help">帮助</string>
+    <string name="tt_import">导入</string>
+    <string name="tt_male">男</string>
+    <string name="tt_more">更多</string>
+    <string name="tt_next">下一步</string>
+    <string name="tt_next_time">下次吧</string>
+    <string name="tt_no">否</string>
+    <string name="tt_off">关</string>
+    <string name="tt_ok">确定</string>
+    <string name="tt_on">开</string>
+    <string name="tt_other">其他</string>
+    <string name="tt_refresh">刷新</string>
+    <string name="tt_save">保存</string>
+    <string name="tt_searching">搜索</string>
+    <string name="tt_settings">设置</string>
+    <string name="tt_share">分享</string>
+    <string name="tt_sign_in">登录</string>
+    <string name="tt_sign_out">登出</string>
+    <string name="tt_skip">跳过</string>
+    <string name="tt_sms_code">短信验证码</string>
+    <string name="tt_start">开始</string>
+    <string name="tt_success">成功</string>
+    <string name="tt_time">时间</string>
+    <string name="tt_unknown">未知</string>
+    <string name="tt_update">更新</string>
+    <string name="tt_upload">上传</string>
+    <string name="tt_view_more">查看更多</string>
+    <string name="tt_waiting">等待中</string>
+    <string name="tt_yes">是</string>
+
+</resources>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="tt_white">@android:color/white</color>
+    <color name="tt_black">@android:color/black</color>
+    <color name="tt_transparent">@android:color/transparent</color>
+    <color name="tt_lighter_gray">#ddd</color>
+    <color name="tt_darker_gray">@android:color/darker_gray</color>
+    <color name="tt_material_dark">#33ffffff</color>
+    <color name="tt_material_light">#1fffffff</color>
+
+    <color name="tt_shadow">#cc222222</color>
+    <color name="tt_divider">#c9c9c9</color>
+    <color name="tt_background_light">@android:color/background_light</color>
+    <color name="tt_background_dark">@android:color/background_dark</color>
+
+    <color name="tt_lime_800">#ff9e9d24</color>
+    <color name="tt_lime_a400">#ffc6ff00</color>
+    <color name="tt_lime_a700">#ffaeea00</color>
+    <color name="tt_teal_200">#ff03dac5</color>
+    <color name="tt_teal_500">#ff009688</color>
+    <color name="tt_teal_700">#ff00796b</color>
+    <color name="tt_teal_800">#ff00695c</color>
+    <color name="tt_cyan_700">#ff0097a7</color>
+    <color name="tt_cyan_800">#ff00838f</color>
+    <color name="tt_blue_700">#ff3367d6</color>
+    <color name="tt_blue_800">#ff2a56c6</color>
+    <color name="tt_indigo_700">#ff303f9f</color>
+    <color name="tt_indigo_800">#ff283593</color>
+    <color name="tt_purple_700">#ff7b1fa2</color>
+    <color name="tt_purple_800">#ff6a1b9a</color>
+    <color name="tt_pink_700">#ffc2185b</color>
+    <color name="tt_pink_800">#ffad1457</color>
+    <color name="tt_red">#ffff0000</color>
+    <color name="tt_red_700">#ffc53929</color>
+    <color name="tt_red_800">#ffb93221</color>
+</resources>

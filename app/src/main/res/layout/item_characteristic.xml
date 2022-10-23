@@ -4,13 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?attr/listChoiceBackgroundIndicator"
+    android:clickable="true"
     android:orientation="vertical">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/characteristic"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp">
+        android:paddingStart="32dp">
 
         <TextView
             android:id="@+id/tv_name"
@@ -24,10 +26,10 @@
 
         <ImageView
             android:id="@+id/iv_notify"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:background="@drawable/ripple_transparent_light"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/ripple_transparent_dark"
             android:src="@drawable/ic_download_multiple_24"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
@@ -35,22 +37,22 @@
 
         <ImageView
             android:id="@+id/iv_write"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:background="@drawable/ripple_transparent_light"
-            android:src="@drawable/ic_download_24"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/ripple_transparent_dark"
+            android:src="@drawable/ic_upload_24"
             android:visibility="gone"
             app:layout_constraintEnd_toStartOf="@id/iv_notify"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/iv_read"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:background="@drawable/ripple_transparent_light"
-            android:src="@drawable/ic_upload_24"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/ripple_transparent_dark"
+            android:src="@drawable/ic_download_24"
             android:visibility="gone"
             app:layout_constraintEnd_toStartOf="@id/iv_write"
             app:layout_constraintTop_toTopOf="parent" />
@@ -70,7 +72,8 @@
             android:id="@+id/tv_uuid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceListItem"
+            android:textAppearance="?attr/textAppearanceListItemSmall"
+            android:textSize="14sp"
             app:layout_constraintBaseline_toBaselineOf="@id/tv_uuid_title"
             app:layout_constraintStart_toEndOf="@id/tv_uuid_title"
             tools:text="01234567-89ab-cdef-0123-456789abcdef" />
@@ -109,7 +112,8 @@
             android:id="@+id/tv_value"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceListItem"
+            android:textAppearance="?attr/textAppearanceListItemSmall"
+            android:textSize="14sp"
             android:visibility="gone"
             app:layout_constraintBaseline_toBaselineOf="@id/tv_value_title"
             app:layout_constraintEnd_toEndOf="parent"
@@ -121,7 +125,7 @@
         android:id="@+id/tv_descriptors_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
+        android:paddingStart="32dp"
         android:text="Descriptors: "
         android:textAppearance="?attr/textAppearanceListItem"
         android:visibility="gone"

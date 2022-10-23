@@ -1,6 +1,5 @@
 package tk.limt.rxble.model
 
-import tk.limt.utils.hex
 import java.nio.ByteBuffer
 import kotlin.math.min
 
@@ -24,6 +23,6 @@ internal class BytePack(val id: Int, val data: ByteArray) {
     }
 
     override fun toString(): String {
-        return "BytePack(id=$id, data=${data.hex()})"
+        return "BytePack(id=$id, data=${data.contentToString()})"
     }
 }

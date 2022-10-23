@@ -33,7 +33,6 @@
         android:drawablePadding="4dp"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         app:drawableStartCompat="@drawable/ic_signal_cellular_4_bar_16"
-        app:drawableTint="?android:attr/textColorTertiary"
         app:layout_constraintBaseline_toBaselineOf="@id/tv_address"
         app:layout_constraintStart_toEndOf="@id/tv_address"
         tools:text="-100 dBm" />

@@ -11,13 +11,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/listChoiceBackgroundIndicator"
-        android:paddingStart="8dp">
+        android:paddingStart="16dp">
 
         <TextView
             android:id="@+id/tv_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="8dp"
             android:text="@string/unknown_service"
             android:textAppearance="?attr/textAppearanceListItem"
             app:layout_constraintStart_toStartOf="parent"
@@ -38,7 +38,8 @@
             android:id="@+id/tv_uuid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceListItem"
+            android:textSize="14sp"
+            android:textAppearance="?attr/textAppearanceListItemSmall"
             app:layout_constraintBaseline_toBaselineOf="@id/tv_uuid_title"
             app:layout_constraintStart_toEndOf="@id/tv_uuid_title"
             tools:text="01234567-89ab-cdef-0123-456789abcdef" />
@@ -55,20 +56,28 @@
             app:layout_constraintTop_toBottomOf="@id/tv_uuid" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <TextView
-        android:id="@+id/tv_empty"
+    <LinearLayout
+        android:id="@+id/ll_characteristics"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingTop="4dp"
-        android:text="@string/empty_service"
-        android:textAppearance="?attr/textAppearanceListItemSecondary"
-        android:visibility="gone" />
+        android:orientation="vertical"
+        android:visibility="gone">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/characteristics"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <TextView
+            android:id="@+id/tv_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="32dp"
+            android:paddingTop="8dp"
+            android:text="@string/empty_service"
+            android:textAppearance="?attr/textAppearanceListItemSecondary"
+            android:visibility="gone" />
+    </LinearLayout>
 </LinearLayout>

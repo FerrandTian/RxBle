@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingStart="16dp">
+    android:paddingStart="32dp">
 
     <TextView
         android:id="@+id/tv_name"
@@ -15,12 +15,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
+    <ImageButton
         android:id="@+id/iv_read"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/ripple_transparent_light"
-        android:src="@drawable/ic_upload_24"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/ripple_transparent_dark"
+        android:src="@drawable/ic_download_24"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -39,7 +40,8 @@
         android:id="@+id/tv_uuid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?attr/textAppearanceListItem"
+        android:textAppearance="?attr/textAppearanceListItemSmall"
+        android:textSize="14sp"
         app:layout_constraintBaseline_toBaselineOf="@id/tv_uuid_title"
         app:layout_constraintStart_toEndOf="@id/tv_uuid_title"
         tools:text="01234567-89ab-cdef-0123-456789abcdef" />
@@ -59,7 +61,8 @@
         android:id="@+id/tv_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?attr/textAppearanceListItem"
+        android:textAppearance="?attr/textAppearanceListItemSmall"
+        android:textSize="14sp"
         android:visibility="gone"
         app:layout_constraintBaseline_toBaselineOf="@id/tv_value_title"
         app:layout_constraintStart_toEndOf="@id/tv_value_title"
