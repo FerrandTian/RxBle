@@ -14,12 +14,7 @@ class MainActivity : TTActivity<ActivityMainBinding>(), OnTabChangeListener<Blue
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        vb = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(vb.root)
-
         setSupportActionBar(vb.toolbar)
-
         vb.viewPager.adapter = adapter
         TabLayoutMediator(vb.tabs, vb.viewPager) { tab, position ->
             tab.text = if (position == 0) "Scanner" else adapter[position - 1].name

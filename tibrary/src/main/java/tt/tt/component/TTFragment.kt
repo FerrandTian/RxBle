@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import tt.tt.rx.TTDisposables
 
 /**
@@ -13,11 +12,9 @@ import tt.tt.rx.TTDisposables
 abstract class TTFragment : Fragment() {
     val log = TTLog(this.javaClass.simpleName)
     val disposables = TTDisposables()
-    protected lateinit var viewModelProvider: ViewModelProvider
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModelProvider = ViewModelProvider(this)
     }
 
     @JvmOverloads

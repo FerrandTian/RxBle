@@ -6,7 +6,6 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import androidx.viewbinding.ViewBinding
 import tt.tt.rx.TTDisposables
 import java.lang.reflect.ParameterizedType
@@ -20,12 +19,10 @@ abstract class TTActivity<VB : ViewBinding> : AppCompatActivity() {
     val disposables = TTDisposables()
     val context: AppCompatActivity
         get() = this
-    protected lateinit var vmp: ViewModelProvider
     protected lateinit var vb: VB
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        vmp = ViewModelProvider(this)
         try {
             val type = javaClass.genericSuperclass as ParameterizedType
             val clazzVB = type.actualTypeArguments[0] as Class<VB>

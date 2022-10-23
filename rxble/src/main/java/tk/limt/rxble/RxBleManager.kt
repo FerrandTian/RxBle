@@ -1,6 +1,5 @@
 package tk.limt.rxble
 
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
@@ -19,17 +18,14 @@ class RxBleManager(var context: Context) {
     private var adapter: BluetoothAdapter = manager.adapter
     private var bleMap: MutableMap<String, RxBle> = HashMap()
 
-    @SuppressLint("MissingPermission")
     fun getConnectionState(device: BluetoothDevice) = manager.getConnectionState(
         device, BluetoothGatt.GATT
     )
 
     fun isBluetoothEnabled() = adapter.isEnabled
 
-    @SuppressLint("MissingPermission")
     fun enableBluetooth() = adapter.enable()
 
-    @SuppressLint("MissingPermission")
     fun disableBluetooth() = adapter.disable()
 
     fun getRemoteDevice(address: String) = adapter.getRemoteDevice(address)

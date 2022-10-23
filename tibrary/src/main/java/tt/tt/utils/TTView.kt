@@ -2,13 +2,8 @@
 
 package tt.tt.utils
 
-import android.app.Activity
 import android.app.Dialog
-import android.graphics.Color
-import android.os.Build
 import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.CompoundButton
 import android.widget.CompoundButton.OnCheckedChangeListener
 import android.widget.PopupWindow
@@ -16,81 +11,6 @@ import android.widget.PopupWindow
 /**
  * @author tianfeng
  */
-fun requestFullscreen(activity: Activity) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        val window = activity.window
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-        window.statusBarColor = Color.TRANSPARENT
-        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE)
-    }
-}
-
-fun setStatusBarColor(activity: Activity, dark: Boolean) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        val decorView = activity.window.decorView
-        var vis = decorView.systemUiVisibility
-        vis =
-            if (dark) vis or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR else vis and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
-        decorView.systemUiVisibility = vis
-    }
-}
-
-fun setEmptyView(root: ViewGroup, emptyView: View, show: Boolean) {
-    if (show) {
-        emptyView.visibility = View.VISIBLE
-        val view = root.getChildAt(0)
-        if (view != emptyView) {
-            root.addView(emptyView, 0)
-            if (!emptyView.isLaidOut)
-                if (root.isLaidOut) requestLayout(
-                    root,
-                    emptyView
-                ) else root.addOnLayoutChangeListener(object :
-                    View.OnLayoutChangeListener {
-                    override fun onLayoutChange(
-                        v: View,
-                        left: Int,
-                        top: Int,
-                        right: Int,
-                        bottom: Int,
-                        oldLeft: Int,
-                        oldTop: Int,
-                        oldRight: Int,
-                        oldBottom: Int,
-                    ) {
-                        v.removeOnLayoutChangeListener(this)
-                        requestLayout(v as ViewGroup, v.getChildAt(0))
-                    }
-                })
-        }
-        for (i in 1 until root.childCount) root.getChildAt(i).visibility = View.GONE
-    } else {
-        val view = root.getChildAt(0)
-        if (view == emptyView) root.removeViewAt(0)
-        for (i in 0 until root.childCount) root.getChildAt(i).visibility = View.VISIBLE
-    }
-    root.requestLayout()
-}
-
-fun requestLayout(parent: ViewGroup, child: View) {
-    child.measure(
-        View.MeasureSpec.makeMeasureSpec(
-            parent.measuredWidth - parent.paddingLeft - parent.paddingRight,
-            View.MeasureSpec.EXACTLY
-        ), View.MeasureSpec.makeMeasureSpec(
-            parent.measuredHeight - parent.paddingTop - parent.paddingBottom,
-            View.MeasureSpec.EXACTLY
-        )
-    )
-    val childLeft = parent.paddingLeft
-    val childTop = parent.paddingTop
-    val childWidth = parent.measuredWidth - parent.paddingLeft - parent.paddingRight
-    val childHeight = parent.measuredHeight - parent.paddingTop - parent.paddingBottom
-    child.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight)
-}
-
 fun <T : View> activate(activated: Boolean, vararg views: T) {
     for (v in views) v.isActivated = activated
 }

@@ -1,6 +1,5 @@
 package tk.limt.rxble
 
-import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.content.Context
 import io.reactivex.rxjava3.core.ObservableEmitter
@@ -8,7 +7,6 @@ import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import tk.limt.rxble.model.Phy
 import tk.limt.rxble.model.RxGatt
 
-@SuppressLint("MissingPermission")
 internal class RxBleOnSubscribe(
     private val context: Context,
     private val device: BluetoothDevice,
