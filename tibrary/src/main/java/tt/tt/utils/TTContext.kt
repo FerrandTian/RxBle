@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.util.TypedValue
+import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.core.app.ActivityCompat
 
 fun Context.hasSystemFeature(featureName: String) = packageManager.hasSystemFeature(featureName)
@@ -43,3 +45,11 @@ fun Context.in2px(value: Float) = TypedValue.applyDimension(
 fun Context.mm2px(value: Float) = TypedValue.applyDimension(
     TypedValue.COMPLEX_UNIT_MM, value, resources.displayMetrics
 )
+
+fun Context.toast(@StringRes resId: Int, duration: Int = Toast.LENGTH_SHORT) {
+    Toast.makeText(this, resId, duration).show()
+}
+
+fun Context.toast(text: CharSequence, duration: Int = Toast.LENGTH_SHORT) {
+    Toast.makeText(this, text, duration).show()
+}

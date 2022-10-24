@@ -12,14 +12,12 @@ import android.provider.Settings
 import android.view.*
 import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import tk.limt.demo.R
 import tk.limt.demo.adapter.ScanAdapter
@@ -30,6 +28,7 @@ import tk.limt.rxble.RxBleManager
 import tt.tt.component.TTFragment
 import tt.tt.component.TTHolder
 import tt.tt.component.TTItemClickListener
+import tt.tt.rx.TTObserver
 import tt.tt.utils.bluetoothEnabled
 import tt.tt.utils.locationEnabled
 import tt.tt.utils.permissionGranted
@@ -39,12 +38,9 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
     TTItemClickListener<ItemScanBinding, ScanResult>, SearchView.OnQueryTextListener {
 
     private var _binding: RefreshBinding? = null
-    private val binding get() = _binding!!
-    private val aty get() = requireActivity() as AppCompatActivity
+    private val vb get() = _binding!!
     private val adapter: ScanAdapter = ScanAdapter(this)
     private val bleManager = RxBleManager.instance
-    private var disposableScan: Disposable? = null
-    private var disposableTimer: Disposable? = null
     private val launcherPermissions = registerForActivityResult(RequestMultiplePermissions()) {}
     private val launcherBluetooth = registerForActivityResult(StartActivityForResult()) {}
     private val launcherLocation = registerForActivityResult(StartActivityForResult()) {}
@@ -53,20 +49,20 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = RefreshBinding.inflate(inflater, container, false)
-        return binding.root
+        return vb.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
-        (binding.recycler.itemAnimator as DefaultItemAnimator).supportsChangeAnimations = false
-        binding.recycler.addItemDecoration(
-            DividerItemDecoration(aty, DividerItemDecoration.VERTICAL)
+        (vb.recycler.itemAnimator as DefaultItemAnimator).supportsChangeAnimations = false
+        vb.recycler.addItemDecoration(
+            DividerItemDecoration(ctx, DividerItemDecoration.VERTICAL)
         )
-        binding.recycler.adapter = adapter
-        binding.refresh.isRefreshing = true
+        vb.recycler.adapter = adapter
+        vb.refresh.isRefreshing = true
         onRefresh()
-        binding.refresh.setOnRefreshListener(this)
+        vb.refresh.setOnRefreshListener(this)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -78,31 +74,31 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
 
     override fun onRefresh() {
         if (checkPermissions() && checkBluetooth() && checkLocation()) {
-            adapter.clear()
-            disposableScan?.dispose()
-            disposableScan = bleManager.scan(
+            bleManager.scan(
                 null,
                 ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-            ).observeOn(AndroidSchedulers.mainThread()).doOnDispose {
+            ).takeUntil(Observable.timer(10, TimeUnit.SECONDS)).observeOn(
+                AndroidSchedulers.mainThread()
+            ).doAfterTerminate {
                 _binding?.refresh?.isRefreshing = false
-            }.subscribe {
-                adapter.put(it)
-            }
-            disposableTimer?.dispose()
-            disposableTimer = Completable.complete().delay(5, TimeUnit.SECONDS).subscribe {
-                disposableScan?.dispose()
-                disposableTimer?.dispose()
-            }
-        } else {
-            _binding?.refresh?.isRefreshing = false
-        }
+            }.subscribe(object : TTObserver<ScanResult>(disposables) {
+                override fun onSubscribe(d: Disposable) {
+                    super.onSubscribe(d)
+                    adapter.clear()
+                }
+
+                override fun onNext(t: ScanResult) {
+                    adapter.put(t)
+                }
+            })
+        } else _binding?.refresh?.isRefreshing = false
     }
 
     override fun onItemClick(
         view: View, holder: TTHolder<ItemScanBinding>, item: ScanResult
     ) {
         if (view == holder.vb.connect) {
-            (activity as OnTabChangeListener<BluetoothDevice>).onTabChange(item.device, true)
+            (ctx as OnTabChangeListener<BluetoothDevice>).onTabChange(item.device, true)
         }
     }
 
@@ -118,11 +114,11 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
     private fun checkPermissions(): Boolean {
         val permissions: MutableList<String> = ArrayList()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (!requireContext().permissionGranted(Manifest.permission.BLUETOOTH_SCAN)) {
+            if (!ctx.permissionGranted(Manifest.permission.BLUETOOTH_SCAN)) {
                 permissions.add(Manifest.permission.BLUETOOTH_SCAN)
             }
         }
-        if (!requireContext().permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
+        if (!ctx.permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
             permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
         }
         if (permissions.isNotEmpty()) {
@@ -133,7 +129,7 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
     }
 
     private fun checkBluetooth(): Boolean {
-        if (!requireContext().bluetoothEnabled) {
+        if (!ctx.bluetoothEnabled) {
             launcherBluetooth.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
             return false
         }
@@ -141,7 +137,7 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
     }
 
     private fun checkLocation(): Boolean {
-        if (!requireContext().locationEnabled) {
+        if (!ctx.locationEnabled) {
             launcherLocation.launch(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
             return false
         }
@@ -150,8 +146,6 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
 
     override fun onDestroyView() {
         super.onDestroyView()
-        disposableScan?.dispose()
-        disposableTimer?.dispose()
         _binding = null
     }
 

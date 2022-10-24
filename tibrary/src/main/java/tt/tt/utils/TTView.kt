@@ -3,6 +3,7 @@
 package tt.tt.utils
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.view.View
 import android.widget.CompoundButton
 import android.widget.CompoundButton.OnCheckedChangeListener
@@ -66,11 +67,11 @@ fun isShowing(view: Any?): Boolean = when (view) {
     else -> false
 }
 
-fun <T : Dialog> dismiss(vararg dialogs: T?) {
-    for (dialog in dialogs) if (dialog != null && dialog.isShowing) dialog.dismiss()
+fun <T : DialogInterface> dismiss(vararg dialogs: T?) {
+    for (dialog in dialogs) dialog?.dismiss()
 }
 
-fun <T : Dialog> cancel(vararg dialogs: T?) {
+fun <T : DialogInterface> cancel(vararg dialogs: T?) {
     for (dialog in dialogs) dialog?.cancel()
 }
 

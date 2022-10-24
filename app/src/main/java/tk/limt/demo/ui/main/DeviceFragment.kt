@@ -9,15 +9,12 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.*
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts.*
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Single
-import io.reactivex.rxjava3.core.SingleObserver
-import io.reactivex.rxjava3.disposables.Disposable
 import tk.limt.demo.R
 import tk.limt.demo.adapter.ServiceAdapter
 import tk.limt.demo.databinding.ItemServiceBinding
@@ -28,16 +25,18 @@ import tk.limt.rxble.RxBleManager
 import tt.tt.component.TTFragment
 import tt.tt.component.TTHolder
 import tt.tt.component.TTItemClickListener
+import tt.tt.rx.TTObserver
+import tt.tt.rx.TTSingleObserver
 import tt.tt.utils.bluetoothEnabled
 import tt.tt.utils.permissionGranted
+import tt.tt.utils.toast
 import java.util.concurrent.TimeUnit
 
 class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, BluetoothGattService>,
     SwipeRefreshLayout.OnRefreshListener {
 
     private var _binding: RefreshBinding? = null
-    private val binding get() = _binding!!
-    private val aty get() = requireActivity() as AppCompatActivity
+    private val vb get() = _binding!!
     private lateinit var adapter: ServiceAdapter
     private var mnConnect: MenuItem? = null
     private val launcherPermissions = registerForActivityResult(RequestMultiplePermissions()) {}
@@ -45,14 +44,12 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
     private val bleManager = RxBleManager.instance
     private lateinit var device: BluetoothDevice
     private lateinit var ble: RxBle
-    private lateinit var disState: Disposable
-    private var disDiscover: Disposable? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = RefreshBinding.inflate(inflater, container, false)
-        return binding.root
+        return vb.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -60,17 +57,21 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
         setHasOptionsMenu(true)
         device = requireArguments().getParcelable("ARG_DATA")!!
         ble = bleManager.obtain(device.address)
-        binding.recycler.addItemDecoration(
-            DividerItemDecoration(aty, DividerItemDecoration.VERTICAL)
+        vb.recycler.addItemDecoration(
+            DividerItemDecoration(ctx, DividerItemDecoration.VERTICAL)
         )
         adapter = ServiceAdapter(ble)
-        binding.recycler.adapter = adapter
-        disState = ble.connectionState().observeOn(AndroidSchedulers.mainThread()).subscribe {
-            updateUiWithData(it)
-        }
-        binding.refresh.isRefreshing = true
+        vb.recycler.adapter = adapter
+        ble.connectionState().observeOn(
+            AndroidSchedulers.mainThread()
+        ).subscribe(object : TTObserver<Int>(disposables) {
+            override fun onNext(t: Int) {
+                updateUiWithData(t)
+            }
+        })
+        vb.refresh.isRefreshing = true
         onRefresh()
-        binding.refresh.setOnRefreshListener(this)
+        vb.refresh.setOnRefreshListener(this)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -85,7 +86,7 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
                 if (ble.isConnected) {
                     ble.disconnect()
                 } else {
-                    binding.refresh.isRefreshing = true
+                    vb.refresh.isRefreshing = true
                     onRefresh()
                 }
                 return true
@@ -99,7 +100,7 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
     }
 
     override fun onRefresh() {
-        if (checkPermissions() && checkBluetooth() && disDiscover == null || disDiscover?.isDisposed == true) {
+        if (checkPermissions() && checkBluetooth()) {
             (if (ble.isDisconnected) ble.connectWithState().timeout(8, TimeUnit.SECONDS).retry(
                 2
             ).filter {
@@ -108,27 +109,22 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
                 ble.discoverServices()
             }.observeOn(
                 AndroidSchedulers.mainThread()
-            ).subscribe(object : SingleObserver<List<BluetoothGattService>> {
-                override fun onSubscribe(d: Disposable) {
-                    disDiscover = d
-                }
-
+            ).doAfterTerminate {
+                vb.refresh.isRefreshing = false
+            }.subscribe(object : TTSingleObserver<List<BluetoothGattService>>(disposables) {
                 override fun onSuccess(t: List<BluetoothGattService>) {
+                    super.onSuccess(t)
                     adapter.clear()
                     adapter.addAll(t)
                     adapter.notifyDataSetChanged()
-                    disDiscover?.dispose()
-                    binding.refresh.isRefreshing = false
                 }
 
                 override fun onError(e: Throwable) {
-                    e.printStackTrace()
-                    disDiscover?.dispose()
-                    binding.refresh.isRefreshing = false
-                    Toast.makeText(aty, e.message, Toast.LENGTH_SHORT).show()
+                    super.onError(e)
+                    e.message?.let { ctx.toast(it) }
                 }
             })
-        }
+        } else vb.refresh.isRefreshing = false
     }
 
     override fun onItemClick(
@@ -141,10 +137,10 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
     fun updateUiWithData(state: Int) {
         when (state) {
             BluetoothProfile.STATE_CONNECTED -> {
-                mnConnect?.title = aty.getString(R.string.disconnect)
+                mnConnect?.title = ctx.getString(R.string.disconnect)
             }
             BluetoothProfile.STATE_DISCONNECTED -> {
-                mnConnect?.title = aty.getString(R.string.connect)
+                mnConnect?.title = ctx.getString(R.string.connect)
             }
         }
     }
@@ -152,7 +148,7 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
     private fun checkPermissions(): Boolean {
         val permissions: MutableList<String> = ArrayList()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (!requireContext().permissionGranted(Manifest.permission.BLUETOOTH_CONNECT)) {
+            if (!ctx.permissionGranted(Manifest.permission.BLUETOOTH_CONNECT)) {
                 permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
             }
         }
@@ -164,7 +160,7 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
     }
 
     private fun checkBluetooth(): Boolean {
-        if (!requireContext().bluetoothEnabled) {
+        if (!ctx.bluetoothEnabled) {
             launcherBluetooth.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
             return false
         }
@@ -173,8 +169,6 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
 
     override fun onDestroyView() {
         super.onDestroyView()
-        disState.dispose()
-        disDiscover?.dispose()
         _binding = null
     }
 

@@ -12,9 +12,7 @@ import io.reactivex.rxjava3.core.Observable
 import tk.limt.rxble.model.RxScanResult
 
 class RxBleManager(var context: Context) {
-    private var manager: BluetoothManager = context.getSystemService(
-        Context.BLUETOOTH_SERVICE
-    ) as BluetoothManager
+    private var manager = context.getSystemService(BluetoothManager::class.java)
     private var adapter: BluetoothAdapter = manager.adapter
     private var bleMap: MutableMap<String, RxBle> = HashMap()
 
@@ -33,6 +31,10 @@ class RxBleManager(var context: Context) {
     fun scan(filters: List<ScanFilter>?, settings: ScanSettings?) = Observable.create(
         RxBleScanOnSubscribe(adapter.bluetoothLeScanner, filters, settings)
     ).ofType(RxScanResult.ScanResult::class.java).map { it.result }
+
+    fun scanList(filters: List<ScanFilter>?, settings: ScanSettings?) = Observable.create(
+        RxBleScanOnSubscribe(adapter.bluetoothLeScanner, filters, settings)
+    ).ofType(RxScanResult.ScanResults::class.java).map { it.results }
 
     fun create(address: String, autoConnect: Boolean = false) = create(
         getRemoteDevice(address), autoConnect

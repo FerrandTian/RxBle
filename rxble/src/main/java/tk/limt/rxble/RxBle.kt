@@ -61,11 +61,12 @@ class RxBle(
         it == BluetoothProfile.STATE_CONNECTED
     }.firstOrError().flatMap { discoverServices() }
 
-    fun discoverServices() = bleObservable.ofType(ServicesDiscovered::class.java).map {
-        services
-    }.firstOrError().doOnSubscribe {
-        check(source.gatt.discoverServices()) { "discoverServices failed" }
-    }
+    fun discoverServices() =
+        bleObservable.ofType(ServicesDiscovered::class.java).firstOrError().map {
+            services
+        }.doOnSubscribe {
+            check(source.gatt.discoverServices()) { "discoverServices failed" }
+        }
 
     fun value(characteristic: BluetoothGattCharacteristic) = bleObservable.ofType(
         CharacteristicChanged::class.java
@@ -75,17 +76,17 @@ class RxBle(
 
     fun read(characteristic: BluetoothGattCharacteristic) = bleObservable.ofType(
         CharacteristicRead::class.java
-    ).filter { it.characteristic.uuid == characteristic.uuid }.map {
+    ).filter { it.characteristic.uuid == characteristic.uuid }.firstOrError().map {
         it.characteristic
-    }.firstOrError().doOnSubscribe {
+    }.doOnSubscribe {
         check(source.gatt.readCharacteristic(characteristic)) { "readCharacteristic failed" }
     }
 
     fun write(characteristic: BluetoothGattCharacteristic) = bleObservable.ofType(
         CharacteristicWrite::class.java
-    ).filter { it.characteristic.uuid == characteristic.uuid }.map {
+    ).filter { it.characteristic.uuid == characteristic.uuid }.firstOrError().map {
         it.characteristic
-    }.firstOrError().doOnSubscribe {
+    }.doOnSubscribe {
         check(source.gatt.writeCharacteristic(characteristic)) { "writeCharacteristic failed" }
     }
 
@@ -111,17 +112,17 @@ class RxBle(
 
     fun read(descriptor: BluetoothGattDescriptor) = bleObservable.ofType(
         DescriptorRead::class.java
-    ).filter { it.descriptor.uuid == descriptor.uuid }.map {
+    ).filter { it.descriptor.uuid == descriptor.uuid }.firstOrError().map {
         it.descriptor
-    }.firstOrError().doOnSubscribe {
+    }.doOnSubscribe {
         check(source.gatt.readDescriptor(descriptor)) { "readDescriptor failed" }
     }
 
     fun write(descriptor: BluetoothGattDescriptor) = bleObservable.ofType(
         DescriptorWrite::class.java
-    ).filter { it.descriptor.uuid == descriptor.uuid }.map {
+    ).filter { it.descriptor.uuid == descriptor.uuid }.firstOrError().map {
         it.descriptor
-    }.firstOrError().doOnSubscribe {
+    }.doOnSubscribe {
         check(source.gatt.writeDescriptor(descriptor)) { "writeDescriptor failed" }
     }
 
@@ -131,16 +132,14 @@ class RxBle(
         check(
             source.gatt.setCharacteristicNotification(
                 descriptor.characteristic,
-                BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE.contentEquals(descriptor.value)
+                !BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE.contentEquals(descriptor.value)
             )
-        ) {
-            "setCharacteristicNotification failed"
-        }
+        ) { "setCharacteristicNotification failed" }
     }
 
-    fun readRemoteRssi() = bleObservable.ofType(ReadRemoteRssi::class.java).map {
+    fun readRemoteRssi() = bleObservable.ofType(ReadRemoteRssi::class.java).firstOrError().map {
         it.rssi
-    }.firstOrError().doOnSubscribe {
+    }.doOnSubscribe {
         check(source.gatt.readRemoteRssi()) { "readRemoteRssi failed" }
     }
 

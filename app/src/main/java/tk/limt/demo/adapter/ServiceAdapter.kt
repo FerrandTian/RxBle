@@ -18,7 +18,7 @@ class ServiceAdapter(
     override fun onBindViewHolder(holder: TTHolder<ItemServiceBinding>, position: Int) {
         val item = items[position]
         holder.vb.tvName.text = GattAttributes.lookup(
-            item.uuid.toString(), context.getString(R.string.unknown_service)
+            item.uuid.toString(), ctx.getString(R.string.unknown_service)
         )
         holder.vb.tvUuid.text = item.uuid.toString()
         holder.vb.tvType.setText(if (item.type == BluetoothGattService.SERVICE_TYPE_PRIMARY) R.string.primary_service else R.string.secondary_service)

@@ -6,7 +6,6 @@ import android.util.Log
  * @author tianfeng
  */
 class TTLog(val tag: String = "TTLog") {
-    @JvmField
     var debug = false
 
     /**

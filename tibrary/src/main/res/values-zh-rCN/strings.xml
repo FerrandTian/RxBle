@@ -30,6 +30,7 @@
     <string name="tt_refresh">刷新</string>
     <string name="tt_save">保存</string>
     <string name="tt_searching">搜索</string>
+    <string name="tt_send">发送</string>
     <string name="tt_settings">设置</string>
     <string name="tt_share">分享</string>
     <string name="tt_sign_in">登录</string>

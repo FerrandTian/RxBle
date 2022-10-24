@@ -1,9 +1,5 @@
 <resources>
     <string name="app_name">RxBle</string>
-    <string name="title_activity_main">MainActivity</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
     <string name="search">Search</string>
@@ -25,9 +21,5 @@
     <string name="signed_write">Signed Write</string>
     <string name="extended_props">Extended Props</string>
     <string name="unknown_descriptor">Unknown Descriptor</string>
-
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
-    <string name="tab_text_1">Tab 1</string>
-    <string name="tab_text_2">Tab 2</string>
+    <string name="write_value">Write value</string>
 </resources>
