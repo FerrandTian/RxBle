@@ -29,8 +29,8 @@ import tt.tt.component.TTFragment
 import tt.tt.component.TTHolder
 import tt.tt.component.TTItemClickListener
 import tt.tt.rx.TTObserver
-import tt.tt.utils.bluetoothEnabled
-import tt.tt.utils.locationEnabled
+import tt.tt.utils.isBluetoothEnabled
+import tt.tt.utils.isLocationEnabled
 import tt.tt.utils.permissionGranted
 import java.util.concurrent.TimeUnit
 
@@ -129,7 +129,7 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
     }
 
     private fun checkBluetooth(): Boolean {
-        if (!ctx.bluetoothEnabled) {
+        if (!ctx.isBluetoothEnabled) {
             launcherBluetooth.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
             return false
         }
@@ -137,7 +137,7 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
     }
 
     private fun checkLocation(): Boolean {
-        if (!ctx.locationEnabled) {
+        if (!ctx.isLocationEnabled) {
             launcherLocation.launch(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
             return false
         }

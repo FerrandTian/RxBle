@@ -21,8 +21,8 @@ class DescriptorAdapter(
     items: MutableList<BluetoothGattDescriptor>
 ) : TTAdapter<ItemDescriptorBinding, BluetoothGattDescriptor>(items) {
     init {
-        clickListener = object : TTItemClickListener<
-                ItemDescriptorBinding, BluetoothGattDescriptor> {
+        clickListener = object :
+            TTItemClickListener<ItemDescriptorBinding, BluetoothGattDescriptor> {
             override fun onItemClick(
                 view: View,
                 holder: TTHolder<ItemDescriptorBinding>,

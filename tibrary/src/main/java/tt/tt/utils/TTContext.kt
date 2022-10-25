@@ -13,10 +13,10 @@ import androidx.core.app.ActivityCompat
 
 fun Context.hasSystemFeature(featureName: String) = packageManager.hasSystemFeature(featureName)
 
-val Context.bluetoothEnabled: Boolean
+val Context.isBluetoothEnabled: Boolean
     get() = getSystemService(BluetoothManager::class.java)?.adapter?.isEnabled == true
 
-val Context.locationEnabled: Boolean
+val Context.isLocationEnabled: Boolean
     get() = getSystemService(LocationManager::class.java)?.let {
         it.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
                 it.isProviderEnabled(LocationManager.NETWORK_PROVIDER)

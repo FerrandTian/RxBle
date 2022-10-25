@@ -18,7 +18,8 @@ class RxBle(
     private var bleDisposable: Disposable? = null
     private val source = RxBleOnSubscribe(context, device, autoConnect)
     private val bleObservable = Observable.create(source).subscribeOn(Schedulers.io()).publish()
-    private var mtu: Int = 20
+    val mtu: Int
+        get() = source.mtu
     val services: List<BluetoothGattService>
         get() = source.gatt.services
 
@@ -90,6 +91,17 @@ class RxBle(
         check(source.gatt.writeCharacteristic(characteristic)) { "writeCharacteristic failed" }
     }
 
+    fun write(
+        values: Iterable<ByteArray>,
+        characteristic: BluetoothGattCharacteristic
+    ) = values.toObservable().concatMapCompletable { value ->
+        characteristic.value = value
+        write(characteristic).flatMapCompletable {
+            check(!value.contentEquals(it.value)) { "writeCharacteristic failed" }
+            Completable.complete()
+        }
+    }
+
     fun reliableWrite(
         values: Iterable<ByteArray>,
         characteristic: BluetoothGattCharacteristic
@@ -144,8 +156,7 @@ class RxBle(
     }
 
     fun mtu() = bleObservable.ofType(MtuChanged::class.java).map {
-        mtu = it.mtu - 3
-        it.mtu
+        it.mtu - 3
     }
 
     fun requestMtu(mtu: Int) = mtu().firstOrError().doOnSubscribe {

@@ -27,7 +27,7 @@ import tt.tt.component.TTHolder
 import tt.tt.component.TTItemClickListener
 import tt.tt.rx.TTObserver
 import tt.tt.rx.TTSingleObserver
-import tt.tt.utils.bluetoothEnabled
+import tt.tt.utils.isBluetoothEnabled
 import tt.tt.utils.permissionGranted
 import tt.tt.utils.toast
 import java.util.concurrent.TimeUnit
@@ -160,7 +160,7 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
     }
 
     private fun checkBluetooth(): Boolean {
-        if (!ctx.bluetoothEnabled) {
+        if (!ctx.isBluetoothEnabled) {
             launcherBluetooth.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
             return false
         }

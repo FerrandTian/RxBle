@@ -12,13 +12,17 @@ internal class RxBleOnSubscribe(
     private val device: BluetoothDevice,
     var autoConnect: Boolean = false,
 ) : ObservableOnSubscribe<RxGatt> {
-    var connectionState: Int = BluetoothProfile.STATE_DISCONNECTED
     var realGatt: BluetoothGatt? = null
+        private set
     val gatt: BluetoothGatt
         get() {
             requireNotNull(realGatt) { "GATT client has not been established or has been closed" }
             return realGatt!!
         }
+    var connectionState: Int = BluetoothProfile.STATE_DISCONNECTED
+        private set
+    var mtu: Int = 20
+        private set
 
     override fun subscribe(emitter: ObservableEmitter<RxGatt>) {
         connectionState = BluetoothProfile.STATE_CONNECTING
@@ -88,6 +92,7 @@ internal class RxBleOnSubscribe(
             }
 
             override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+                this@RxBleOnSubscribe.mtu = mtu - 3
                 emitter.onNext(RxGatt.MtuChanged(gatt, mtu, status))
             }
 

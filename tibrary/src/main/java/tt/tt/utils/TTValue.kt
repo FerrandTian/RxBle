@@ -36,3 +36,16 @@ fun CharSequence.hexToBytes(): ByteArray {
     }
     return bytes
 }
+
+fun ByteArray.split(limit: Int): List<ByteArray> {
+    require(limit > 0) { "limit should > 0" }
+    val list = ArrayList<ByteArray>()
+    var from = 0
+    var to = kotlin.math.min(limit, size)
+    do {
+        list.add(copyOfRange(from, to))
+        from += limit
+        to = kotlin.math.min(from + limit, size)
+    } while (from < size)
+    return list
+}
