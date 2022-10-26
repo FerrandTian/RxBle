@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2022-present, TianFeng.
+ *
+ *     Licensed under the Apache License, Version 2.0 (the "License");
+ *     you may not use this file except in compliance with the License.
+ *     You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *     Unless required by applicable law or agreed to in writing, software
+ *     distributed under the License is distributed on an "AS IS" BASIS,
+ *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *     See the License for the specific language governing permissions and
+ *     limitations under the License.
+ */
+
 package tk.limt.rxble
 
 import android.bluetooth.BluetoothAdapter
@@ -41,7 +57,7 @@ class RxBleManager(var context: Context) {
     )
 
     fun create(device: BluetoothDevice, autoConnect: Boolean = false): RxBle {
-        check(bleMap.size <= 8) { "A maximum of 8 connections are supported" }
+//        check(bleMap.size <= 8) { "A maximum of 8 connections are supported" }
         val ble = RxBle(context, device, autoConnect)
         bleMap[device.address] = ble
         return ble
