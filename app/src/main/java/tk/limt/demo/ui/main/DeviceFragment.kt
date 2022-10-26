@@ -137,10 +137,10 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
     fun updateUiWithData(state: Int) {
         when (state) {
             BluetoothProfile.STATE_CONNECTED -> {
-                mnConnect?.title = ctx.getString(R.string.disconnect)
+                mnConnect?.title = ctx.getString(tt.tt.R.string.tt_disconnect)
             }
             BluetoothProfile.STATE_DISCONNECTED -> {
-                mnConnect?.title = ctx.getString(R.string.connect)
+                mnConnect?.title = ctx.getString(tt.tt.R.string.tt_connect)
             }
         }
     }

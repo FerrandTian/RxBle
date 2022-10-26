@@ -77,9 +77,9 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
             bleManager.scan(
                 null,
                 ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-            ).takeUntil(Observable.timer(10, TimeUnit.SECONDS)).observeOn(
-                AndroidSchedulers.mainThread()
-            ).doAfterTerminate {
+            ).filter { it.device.name != null }.takeUntil(
+                Observable.timer(10, TimeUnit.SECONDS)
+            ).observeOn(AndroidSchedulers.mainThread()).doAfterTerminate {
                 _binding?.refresh?.isRefreshing = false
             }.subscribe(object : TTObserver<ScanResult>(disposables) {
                 override fun onSubscribe(d: Disposable) {

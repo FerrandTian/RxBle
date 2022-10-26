@@ -10,10 +10,13 @@
     <string name="tt_add">Add</string>
     <string name="tt_all">All</string>
     <string name="tt_cancel">Cancel</string>
+    <string name="tt_close">Close</string>
+    <string name="tt_connect">Connect</string>
     <string name="tt_complete">Complete</string>
     <string name="tt_delete">Delete</string>
     <string name="tt_device">Device</string>
     <string name="tt_disagree">Disagree</string>
+    <string name="tt_disconnect">Disconnect</string>
     <string name="tt_done">Done</string>
     <string name="tt_download">Download</string>
     <string name="tt_female">Female</string>
@@ -22,6 +25,7 @@
     <string name="tt_go_settings">Go Settings</string>
     <string name="tt_help">Help</string>
     <string name="tt_import">Import</string>
+    <string name="tt_loading">Loading</string>
     <string name="tt_male">Male</string>
     <string name="tt_more">More</string>
     <string name="tt_next">Next</string>
@@ -33,6 +37,7 @@
     <string name="tt_other">Other</string>
     <string name="tt_refresh">Refresh</string>
     <string name="tt_save">Save</string>
+    <string name="tt_search">Search</string>
     <string name="tt_searching">Searching</string>
     <string name="tt_send">Send</string>
     <string name="tt_settings">Settings</string>
