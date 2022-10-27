@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2022-present, TianFeng.
+ * Copyright (C) 2022 TianFeng
  *
- *     Licensed under the Apache License, Version 2.0 (the "License");
- *     you may not use this file except in compliance with the License.
- *     You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *     Unless required by applicable law or agreed to in writing, software
- *     distributed under the License is distributed on an "AS IS" BASIS,
- *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *     See the License for the specific language governing permissions and
- *     limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package tk.limt.rxble
@@ -74,21 +74,20 @@ class RxBle(
         connect()
     }
 
-    fun connectAndDiscoverServices() = connectWithState().filter {
+    fun connectWithServices() = connectWithState().filter {
         it == BluetoothProfile.STATE_CONNECTED
     }.firstOrError().flatMap { discoverServices() }
 
-    fun discoverServices() =
-        bleObservable.ofType(ServicesDiscovered::class.java).firstOrError().map {
-            services
-        }.doOnSubscribe {
-            check(source.gatt.discoverServices()) { "discoverServices failed" }
-        }
+    fun discoverServices() = bleObservable.ofType(
+        ServicesDiscovered::class.java
+    ).firstOrError().map { services }.doOnSubscribe {
+        check(source.gatt.discoverServices()) { "discoverServices failed" }
+    }
 
-    fun value(characteristic: BluetoothGattCharacteristic) = bleObservable.ofType(
+    fun characteristic(uuid: UUID) = bleObservable.ofType(
         CharacteristicChanged::class.java
-    ).filter { it.characteristic.uuid == characteristic.uuid }.map {
-        it.characteristic.value
+    ).filter { it.characteristic.uuid == uuid }.map {
+        it.characteristic
     }
 
     fun read(characteristic: BluetoothGattCharacteristic) = bleObservable.ofType(
@@ -179,5 +178,5 @@ class RxBle(
         check(source.gatt.requestMtu(mtu)) { "requestMtu failed" }
     }
 
-    fun services() = bleObservable.ofType(ServiceChanged::class.java).map { services }
+    fun service() = bleObservable.ofType(ServiceChanged::class.java).map { services }
 }

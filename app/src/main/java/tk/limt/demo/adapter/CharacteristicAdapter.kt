@@ -1,24 +1,23 @@
 /*
- * Copyright (c) 2022-present, TianFeng.
+ * Copyright (C) 2022 TianFeng
  *
- *     Licensed under the Apache License, Version 2.0 (the "License");
- *     you may not use this file except in compliance with the License.
- *     You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *     Unless required by applicable law or agreed to in writing, software
- *     distributed under the License is distributed on an "AS IS" BASIS,
- *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *     See the License for the specific language governing permissions and
- *     limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package tk.limt.demo.adapter
 
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
-import android.content.DialogInterface
 import android.view.View
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
@@ -117,11 +116,11 @@ class CharacteristicAdapter(
         } else {
             gone(holder.vb.ivNotify, holder.vb.tvDescriptorsTitle, holder.vb.descriptors)
         }
-        ble.value(item).observeOn(
+        ble.characteristic(item.uuid).observeOn(
             AndroidSchedulers.mainThread()
-        ).subscribe(object : TTObserver<ByteArray>(holder.disposables) {
-            override fun onNext(t: ByteArray) {
-                holder.vb.tvValue.text = t.hex(true)
+        ).subscribe(object : TTObserver<BluetoothGattCharacteristic>(holder.disposables) {
+            override fun onNext(t: BluetoothGattCharacteristic) {
+                holder.vb.tvValue.text = t.value.hex(true)
                 visible(holder.vb.tvValueTitle, holder.vb.tvValue)
             }
         })
