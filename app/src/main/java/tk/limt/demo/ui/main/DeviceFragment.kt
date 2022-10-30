@@ -33,14 +33,13 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Single
 import tk.limt.demo.R
 import tk.limt.demo.adapter.ServiceAdapter
+import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ItemServiceBinding
 import tk.limt.demo.databinding.RefreshBinding
 import tk.limt.demo.impl.OnTabChangeListener
-import tk.limt.rxble.RxBle
-import tk.limt.rxble.RxBleManager
 import tt.tt.component.TTFragment
 import tt.tt.component.TTHolder
-import tt.tt.component.TTItemClickListener
+import tt.tt.component.TTOnClickListener
 import tt.tt.rx.TTObserver
 import tt.tt.rx.TTSingleObserver
 import tt.tt.utils.isBluetoothEnabled
@@ -48,37 +47,25 @@ import tt.tt.utils.permissionGranted
 import tt.tt.utils.toast
 import java.util.concurrent.TimeUnit
 
-class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, BluetoothGattService>,
+class DeviceFragment : TTFragment<RefreshBinding>(), TTOnClickListener<ItemServiceBinding, BluetoothGattService>,
     SwipeRefreshLayout.OnRefreshListener {
-
-    private var _binding: RefreshBinding? = null
-    private val vb get() = _binding!!
     private lateinit var adapter: ServiceAdapter
     private var mnConnect: MenuItem? = null
     private val launcherPermissions = registerForActivityResult(RequestMultiplePermissions()) {}
     private val launcherBluetooth = registerForActivityResult(StartActivityForResult()) {}
-    private val bleManager = RxBleManager.instance
+    private val manager = DeviceManager.instance
     private lateinit var device: BluetoothDevice
-    private lateinit var ble: RxBle
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View {
-        _binding = RefreshBinding.inflate(inflater, container, false)
-        return vb.root
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
         device = requireArguments().getParcelable("ARG_DATA")!!
-        ble = bleManager.obtain(device.address)
         vb.recycler.addItemDecoration(
             DividerItemDecoration(ctx, DividerItemDecoration.VERTICAL)
         )
-        adapter = ServiceAdapter(ble)
+        adapter = ServiceAdapter(device.address)
         vb.recycler.adapter = adapter
-        ble.connectionState().observeOn(
+        manager.obtain(device.address).connectionState().observeOn(
             AndroidSchedulers.mainThread()
         ).subscribe(object : TTObserver<Int>(disposables) {
             override fun onNext(t: Int) {
@@ -93,14 +80,14 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.fragment_device, menu)
         mnConnect = menu.findItem(R.id.connect)
-        updateUiWithData(ble.connectionState)
+        updateUiWithData(manager.obtain(device.address).connectionState)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.connect -> {
-                if (ble.isConnected) {
-                    ble.disconnect()
+                if (manager.isConnected(device.address)) {
+                    manager.obtain(device.address).disconnect()
                 } else {
                     vb.refresh.isRefreshing = true
                     onRefresh()
@@ -108,7 +95,7 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
                 return true
             }
             R.id.close -> {
-                bleManager.close(device)
+                manager.close(device.address)
                 (activity as OnTabChangeListener<BluetoothDevice>).onTabChange(device, false)
             }
         }
@@ -117,12 +104,12 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
 
     override fun onRefresh() {
         if (checkPermissions() && checkBluetooth()) {
-            (if (ble.isDisconnected) ble.connectWithState().timeout(8, TimeUnit.SECONDS).retry(
+            (if (manager.obtain(device.address).isDisconnected) manager.obtain(device.address).connectWithState().timeout(8, TimeUnit.SECONDS).retry(
                 2
             ).filter {
                 it == BluetoothProfile.STATE_CONNECTED
             }.firstOrError() else Single.just(BluetoothProfile.STATE_CONNECTED)).flatMap {
-                ble.discoverServices()
+                manager.obtain(device.address).discoverServices()
             }.observeOn(
                 AndroidSchedulers.mainThread()
             ).doAfterTerminate {
@@ -143,7 +130,7 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
         } else vb.refresh.isRefreshing = false
     }
 
-    override fun onItemClick(
+    override fun onClick(
         view: View,
         holder: TTHolder<ItemServiceBinding>,
         item: BluetoothGattService
@@ -181,11 +168,6 @@ class DeviceFragment : TTFragment(), TTItemClickListener<ItemServiceBinding, Blu
             return false
         }
         return true
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 
     companion object {

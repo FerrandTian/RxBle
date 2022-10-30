@@ -23,11 +23,11 @@ import tt.tt.rx.TTDisposables
 /**
  * @author tianfeng
  */
-class TTHolder<VB : ViewBinding>(val vb: VB) : RecyclerView.ViewHolder(vb.root) {
+class TTHolder<B : ViewBinding>(val vb: B) : RecyclerView.ViewHolder(vb.root) {
     val disposables = TTDisposables()
 
     companion object {
-        fun type(clazz: Class<out ViewBinding>?): Int {
+        fun viewType(clazz: Class<out ViewBinding>?): Int {
             return clazz?.hashCode() ?: RecyclerView.INVALID_TYPE
         }
     }

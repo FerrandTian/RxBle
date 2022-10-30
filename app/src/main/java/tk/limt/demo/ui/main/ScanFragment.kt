@@ -25,7 +25,9 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.*
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.widget.SearchView
@@ -37,36 +39,26 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import tk.limt.demo.R
 import tk.limt.demo.adapter.ScanAdapter
+import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ItemScanBinding
 import tk.limt.demo.databinding.RefreshBinding
 import tk.limt.demo.impl.OnTabChangeListener
-import tk.limt.rxble.RxBleManager
 import tt.tt.component.TTFragment
 import tt.tt.component.TTHolder
-import tt.tt.component.TTItemClickListener
+import tt.tt.component.TTOnClickListener
 import tt.tt.rx.TTObserver
 import tt.tt.utils.isBluetoothEnabled
 import tt.tt.utils.isLocationEnabled
 import tt.tt.utils.permissionGranted
 import java.util.concurrent.TimeUnit
 
-class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
-    TTItemClickListener<ItemScanBinding, ScanResult>, SearchView.OnQueryTextListener {
-
-    private var _binding: RefreshBinding? = null
-    private val vb get() = _binding!!
+class ScanFragment : TTFragment<RefreshBinding>(), SwipeRefreshLayout.OnRefreshListener,
+    TTOnClickListener<ItemScanBinding, ScanResult>, SearchView.OnQueryTextListener {
     private val adapter: ScanAdapter = ScanAdapter(this)
-    private val bleManager = RxBleManager.instance
+    private val deviceManager = DeviceManager.instance
     private val launcherPermissions = registerForActivityResult(RequestMultiplePermissions()) {}
     private val launcherBluetooth = registerForActivityResult(StartActivityForResult()) {}
     private val launcherLocation = registerForActivityResult(StartActivityForResult()) {}
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View {
-        _binding = RefreshBinding.inflate(inflater, container, false)
-        return vb.root
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -90,13 +82,13 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
 
     override fun onRefresh() {
         if (checkPermissions() && checkBluetooth() && checkLocation()) {
-            bleManager.scan(
+            deviceManager.scan(
                 null,
                 ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
             ).filter { it.device.name != null }.takeUntil(
                 Observable.timer(10, TimeUnit.SECONDS)
             ).observeOn(AndroidSchedulers.mainThread()).doAfterTerminate {
-                _binding?.refresh?.isRefreshing = false
+                vb.refresh.isRefreshing = false
             }.subscribe(object : TTObserver<ScanResult>(disposables) {
                 override fun onSubscribe(d: Disposable) {
                     super.onSubscribe(d)
@@ -107,10 +99,10 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
                     adapter.put(t)
                 }
             })
-        } else _binding?.refresh?.isRefreshing = false
+        } else vb.refresh.isRefreshing = false
     }
 
-    override fun onItemClick(
+    override fun onClick(
         view: View, holder: TTHolder<ItemScanBinding>, item: ScanResult
     ) {
         if (view == holder.vb.connect) {
@@ -158,11 +150,6 @@ class ScanFragment : TTFragment(), SwipeRefreshLayout.OnRefreshListener,
             return false
         }
         return true
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 
     companion object {

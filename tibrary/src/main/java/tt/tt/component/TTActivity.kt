@@ -20,6 +20,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.viewbinding.ViewBinding
 import tt.tt.rx.TTDisposables
 import java.lang.reflect.ParameterizedType
@@ -27,24 +28,26 @@ import java.lang.reflect.ParameterizedType
 /**
  * @author tianfeng
  */
-abstract class TTActivity<VB : ViewBinding> : AppCompatActivity() {
+abstract class TTActivity<B : ViewBinding> : AppCompatActivity() {
     val log = TTLog(this.javaClass.simpleName)
     val disposables = TTDisposables()
     val ctx: AppCompatActivity
         get() = this
-    lateinit var vb: VB
+    lateinit var vb: B
+    lateinit var vmp: ViewModelProvider
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
             val type = javaClass.genericSuperclass as ParameterizedType
-            val clazzVB = type.actualTypeArguments[0] as Class<VB>
+            val clazzVB = type.actualTypeArguments[0] as Class<B>
             val inflate = clazzVB.getDeclaredMethod("inflate", LayoutInflater::class.java)
-            vb = inflate.invoke(null, layoutInflater) as VB
+            vb = inflate.invoke(null, layoutInflater) as B
             setContentView(vb.root)
         } catch (e: Exception) {
             e.printStackTrace()
         }
+        vmp = ViewModelProvider(this)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 

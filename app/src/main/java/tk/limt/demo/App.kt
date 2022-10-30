@@ -17,11 +17,16 @@
 package tk.limt.demo
 
 import android.app.Application
-import tk.limt.rxble.RxBleManager
+import tk.limt.demo.data.DeviceManager
 
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
-        RxBleManager.init(this)
+        DeviceManager.init(this)
+    }
+
+    override fun onTerminate() {
+        super.onTerminate()
+        DeviceManager.instance.closeAll()
     }
 }

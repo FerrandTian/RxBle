@@ -23,11 +23,11 @@ import tk.limt.demo.databinding.ItemScanBinding
 import tk.limt.demo.displayName
 import tt.tt.component.TTAdapter
 import tt.tt.component.TTHolder
-import tt.tt.component.TTItemClickListener
+import tt.tt.component.TTOnClickListener
 
 class ScanAdapter(
-    clickListener: TTItemClickListener<ItemScanBinding, ScanResult>
-) : TTAdapter<ItemScanBinding, ScanResult>(clickListener = clickListener) {
+    private var clickListener: TTOnClickListener<ItemScanBinding, ScanResult>
+) : TTAdapter<ItemScanBinding, ScanResult>() {
 
     var keyword: String? = null
         set(value) {
@@ -44,17 +44,20 @@ class ScanAdapter(
         }
     var list: MutableList<ScanResult> = items
 
-    override fun onBindViewHolder(holder: TTHolder<ItemScanBinding>, position: Int) {
-        val item = list[position]
-        item.device?.let {
-            holder.vb.tvAddress.text = it.address
+    override fun onBindViewHolder(holder: TTHolder<*>, position: Int) {
+        if (holder.vb is ItemScanBinding) {
+            holder as TTHolder<ItemScanBinding>
+            val item = list[position]
+            item.device?.let {
+                holder.vb.tvAddress.text = it.address
+            }
+            holder.vb.tvName.text = item.displayName ?: "N/A"
+            holder.vb.tvRssi.text = "${item.rssi} dBm"
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                holder.vb.connect.visibility = if (item.isConnectable) View.VISIBLE else View.GONE
+            }
+            setClickListener(holder, item, clickListener, holder.itemView, holder.vb.connect)
         }
-        holder.vb.tvName.text = item.displayName ?: "N/A"
-        holder.vb.tvRssi.text = "${item.rssi} dBm"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            holder.vb.connect.visibility = if (item.isConnectable) View.VISIBLE else View.GONE
-        }
-        setClickListener(holder, item, holder.itemView, holder.vb.connect)
     }
 
     fun put(element: ScanResult) {
