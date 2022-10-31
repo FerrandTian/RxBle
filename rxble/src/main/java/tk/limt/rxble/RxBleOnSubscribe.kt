@@ -24,7 +24,7 @@ import tk.limt.rxble.model.Phy
 import tk.limt.rxble.model.RxGatt
 
 internal class RxBleOnSubscribe(
-    private val context: Context,
+    private val ctx: Context,
     private val device: BluetoothDevice,
     var autoConnect: Boolean = false,
 ) : ObservableOnSubscribe<RxGatt> {
@@ -42,7 +42,7 @@ internal class RxBleOnSubscribe(
 
     override fun subscribe(emitter: ObservableEmitter<RxGatt>) {
         connectionState = BluetoothProfile.STATE_CONNECTING
-        realGatt = device.connectGatt(context, autoConnect, object : BluetoothGattCallback() {
+        realGatt = device.connectGatt(ctx, autoConnect, object : BluetoothGattCallback() {
             override fun onPhyUpdate(gatt: BluetoothGatt, txPhy: Int, rxPhy: Int, status: Int) {
                 emitter.onNext(RxGatt.PhyUpdate(gatt, Phy(txPhy, rxPhy), status))
             }

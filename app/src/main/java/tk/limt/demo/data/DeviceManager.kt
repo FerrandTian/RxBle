@@ -26,8 +26,8 @@ import tk.limt.rxble.RxBleManager
 /**
  * Manage all connections to remote device.
  */
-class DeviceManager(var context: Context) {
-    private val bleManager = RxBleManager(context)
+class DeviceManager(var ctx: Context) {
+    private val bleManager = RxBleManager(ctx)
     private var bleMap: MutableMap<String, RxBle> = HashMap()
 
     fun scan(filters: List<ScanFilter>?, settings: ScanSettings?) =
@@ -62,8 +62,8 @@ class DeviceManager(var context: Context) {
         lateinit var instance: DeviceManager
 
         @JvmStatic
-        fun init(context: Context) {
-            instance = DeviceManager(context)
+        fun init(ctx: Context) {
+            instance = DeviceManager(ctx)
         }
     }
 }

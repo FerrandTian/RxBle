@@ -23,8 +23,8 @@ import android.content.Context
 import io.reactivex.rxjava3.core.Observable
 import tk.limt.rxble.model.RxScanResult
 
-class RxBleManager(var context: Context) {
-    private var manager = context.getSystemService(BluetoothManager::class.java)
+class RxBleManager(var ctx: Context) {
+    private var manager = ctx.getSystemService(BluetoothManager::class.java)
     private var adapter: BluetoothAdapter = manager.adapter
 
     /**
@@ -234,7 +234,7 @@ class RxBleManager(var context: Context) {
      * @return The new {@code RxBle} instance.
      */
     fun create(device: BluetoothDevice, autoConnect: Boolean = false) = RxBle(
-        context, device, autoConnect
+        ctx, device, autoConnect
     )
 
     companion object {
@@ -242,8 +242,8 @@ class RxBleManager(var context: Context) {
         lateinit var instance: RxBleManager
 
         @JvmStatic
-        fun init(context: Context) {
-            instance = RxBleManager(context)
+        fun init(ctx: Context) {
+            instance = RxBleManager(ctx)
         }
     }
 }

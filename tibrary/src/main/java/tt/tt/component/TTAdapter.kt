@@ -65,7 +65,7 @@ abstract class TTAdapter<B : ViewBinding, T>(
     }
 
     protected fun setClickListener(
-        holder: TTHolder<B>, item: T, listener: TTOnClickListener<B, T>, vararg views: View
+        holder: TTHolder<B>, item: T?, listener: TTOnClickListener<B, T>, vararg views: View
     ) {
         val l = View.OnClickListener { v -> listener.onClick(v, holder, item) }
         for (v in views) v.setOnClickListener(l)

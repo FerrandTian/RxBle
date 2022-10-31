@@ -48,7 +48,6 @@ abstract class TTActivity<B : ViewBinding> : AppCompatActivity() {
             e.printStackTrace()
         }
         vmp = ViewModelProvider(this)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

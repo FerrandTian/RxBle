@@ -35,7 +35,7 @@ import tk.limt.demo.R
 import tk.limt.demo.adapter.ServiceAdapter
 import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ItemServiceBinding
-import tk.limt.demo.databinding.RefreshBinding
+import tk.limt.demo.databinding.RefreshRecyclerBinding
 import tk.limt.demo.impl.OnTabChangeListener
 import tt.tt.component.TTFragment
 import tt.tt.component.TTHolder
@@ -47,7 +47,8 @@ import tt.tt.utils.permissionGranted
 import tt.tt.utils.toast
 import java.util.concurrent.TimeUnit
 
-class DeviceFragment : TTFragment<RefreshBinding>(), TTOnClickListener<ItemServiceBinding, BluetoothGattService>,
+class DeviceFragment : TTFragment<RefreshRecyclerBinding>(),
+    TTOnClickListener<ItemServiceBinding, BluetoothGattService>,
     SwipeRefreshLayout.OnRefreshListener {
     private lateinit var adapter: ServiceAdapter
     private var mnConnect: MenuItem? = null
@@ -104,7 +105,8 @@ class DeviceFragment : TTFragment<RefreshBinding>(), TTOnClickListener<ItemServi
 
     override fun onRefresh() {
         if (checkPermissions() && checkBluetooth()) {
-            (if (manager.obtain(device.address).isDisconnected) manager.obtain(device.address).connectWithState().timeout(8, TimeUnit.SECONDS).retry(
+            (if (manager.obtain(device.address).isDisconnected) manager.obtain(device.address)
+                .connectWithState().timeout(8, TimeUnit.SECONDS).retry(
                 2
             ).filter {
                 it == BluetoothProfile.STATE_CONNECTED
@@ -133,7 +135,7 @@ class DeviceFragment : TTFragment<RefreshBinding>(), TTOnClickListener<ItemServi
     override fun onClick(
         view: View,
         holder: TTHolder<ItemServiceBinding>,
-        item: BluetoothGattService
+        item: BluetoothGattService?
     ) {
     }
 

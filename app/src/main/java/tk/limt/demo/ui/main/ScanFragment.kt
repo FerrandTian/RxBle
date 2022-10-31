@@ -41,7 +41,7 @@ import tk.limt.demo.R
 import tk.limt.demo.adapter.ScanAdapter
 import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ItemScanBinding
-import tk.limt.demo.databinding.RefreshBinding
+import tk.limt.demo.databinding.RefreshRecyclerBinding
 import tk.limt.demo.impl.OnTabChangeListener
 import tt.tt.component.TTFragment
 import tt.tt.component.TTHolder
@@ -52,7 +52,7 @@ import tt.tt.utils.isLocationEnabled
 import tt.tt.utils.permissionGranted
 import java.util.concurrent.TimeUnit
 
-class ScanFragment : TTFragment<RefreshBinding>(), SwipeRefreshLayout.OnRefreshListener,
+class ScanFragment : TTFragment<RefreshRecyclerBinding>(), SwipeRefreshLayout.OnRefreshListener,
     TTOnClickListener<ItemScanBinding, ScanResult>, SearchView.OnQueryTextListener {
     private val adapter: ScanAdapter = ScanAdapter(this)
     private val deviceManager = DeviceManager.instance
@@ -103,10 +103,10 @@ class ScanFragment : TTFragment<RefreshBinding>(), SwipeRefreshLayout.OnRefreshL
     }
 
     override fun onClick(
-        view: View, holder: TTHolder<ItemScanBinding>, item: ScanResult
+        view: View, holder: TTHolder<ItemScanBinding>, item: ScanResult?
     ) {
         if (view == holder.vb.connect) {
-            (ctx as OnTabChangeListener<BluetoothDevice>).onTabChange(item.device, true)
+            item?.let { (ctx as OnTabChangeListener<BluetoothDevice>).onTabChange(it.device, true) }
         }
     }
 

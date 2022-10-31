@@ -30,18 +30,18 @@ import tt.tt.utils.visible
 class ServiceAdapter(
     val address: String
 ) : TTAdapter<ItemServiceBinding, BluetoothGattService>() {
-    private val clickListener =
-        object : TTOnClickListener<ItemServiceBinding, BluetoothGattService> {
-            override fun onClick(
-                view: View,
-                holder: TTHolder<ItemServiceBinding>,
-                item: BluetoothGattService
-            ) {
-                holder.vb.llCharacteristics.visibility = if (
-                    holder.vb.llCharacteristics.isShown
-                ) View.GONE else View.VISIBLE
-            }
+    private val clickListener = object :
+        TTOnClickListener<ItemServiceBinding, BluetoothGattService> {
+        override fun onClick(
+            view: View,
+            holder: TTHolder<ItemServiceBinding>,
+            item: BluetoothGattService?
+        ) {
+            holder.vb.llCharacteristics.visibility = if (
+                holder.vb.llCharacteristics.isShown
+            ) View.GONE else View.VISIBLE
         }
+    }
 
     override fun onBindViewHolder(holder: TTHolder<*>, position: Int) {
         if (holder.vb is ItemServiceBinding) {

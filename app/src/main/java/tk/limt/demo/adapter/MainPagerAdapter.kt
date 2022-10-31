@@ -24,9 +24,9 @@ import tk.limt.demo.ui.main.DeviceFragment
 import tk.limt.demo.ui.main.ScanFragment
 
 class MainPagerAdapter(
-    context: FragmentActivity,
+    ctx: FragmentActivity,
     val items: MutableList<BluetoothDevice> = ArrayList()
-) : FragmentStateAdapter(context), MutableList<BluetoothDevice> by items {
+) : FragmentStateAdapter(ctx), MutableList<BluetoothDevice> by items {
 
     override fun getItemCount(): Int {
         return items.size + 1
