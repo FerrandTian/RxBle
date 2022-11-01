@@ -21,6 +21,7 @@ import android.bluetooth.BluetoothGattDescriptor
 import android.view.View
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
+import androidx.viewbinding.ViewBinding
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.Disposable
 import tk.limt.demo.R
@@ -48,10 +49,10 @@ class CharacteristicAdapter(
         override fun onClick(
             view: View,
             holder: TTHolder<ItemCharacteristicBinding>,
-            item: BluetoothGattCharacteristic?
+            ch: BluetoothGattCharacteristic?
         ) {
             when (view) {
-                holder.vb.ivRead -> item?.let {
+                holder.vb.ivRead -> ch?.let {
                     manager.obtain(address).read(it).observeOn(
                         AndroidSchedulers.mainThread()
                     ).subscribe(object :
@@ -68,26 +69,26 @@ class CharacteristicAdapter(
                         }
                     })
                 }
-                holder.vb.ivWrite -> item?.let { showSendDialog(holder, it) }
+                holder.vb.ivWrite -> ch?.let { showSendDialog(holder, it) }
                 holder.vb.ivNotify -> {
-                    item?.let {
-                        manager.obtain(address).setNotification(item.descriptors[0]).observeOn(
+                    ch?.let {
+                        manager.obtain(address).setNotification(ch.descriptors[0]).observeOn(
                             AndroidSchedulers.mainThread()
                         ).subscribe(object :
                             TTSingleObserver<BluetoothGattDescriptor>(holder.disposables) {
                             override fun onSubscribe(d: Disposable) {
                                 super.onSubscribe(d)
-                                item.descriptors[0].value = if (
-                                    item.isNotificationEnabled
+                                ch.descriptors[0].value = if (
+                                    ch.isNotificationEnabled
                                 ) BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE else BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
                             }
 
                             override fun onSuccess(t: BluetoothGattDescriptor) {
                                 super.onSuccess(t)
                                 holder.vb.ivNotify.setImageResource(
-                                    if (
-                                        item.isNotificationEnabled
-                                    ) R.drawable.ic_download_multiple_disable_24 else R.drawable.ic_download_multiple_24
+                                    if (ch.isNotificationEnabled) {
+                                        R.drawable.ic_download_multiple_disable_24
+                                    } else R.drawable.ic_download_multiple_24
                                 )
                                 holder.vb.descriptors.adapter?.notifyItemChanged(0)
                             }
@@ -103,44 +104,45 @@ class CharacteristicAdapter(
         }
     }
 
-    override fun onBindViewHolder(holder: TTHolder<*>, position: Int) {
+    override fun onBindViewHolder(holder: TTHolder<ViewBinding>, position: Int) {
         if (holder.vb is ItemCharacteristicBinding) {
-            holder as TTHolder<ItemCharacteristicBinding>
+            val vb = holder.vb as ItemCharacteristicBinding
             val item = items[position]
-            holder.vb.tvName.text = GattAttributes.lookup(
+            vb.tvName.text = GattAttributes.lookup(
                 item.uuid.toString(), ctx.getString(R.string.unknown_characteristic)
             )
-            holder.vb.tvUuid.text = item.uuid.toString()
-            holder.vb.tvProps.text = item.propertiesString
+            vb.tvUuid.text = item.uuid.toString()
+            vb.tvProps.text = item.propertiesString
             gone(
                 item.isPropertySupported(BluetoothGattCharacteristic.PROPERTY_READ),
-                holder.vb.ivRead
+                vb.ivRead
             )
             gone(
                 item.isPropertySupported(BluetoothGattCharacteristic.PROPERTY_WRITE),
-                holder.vb.ivWrite
+                vb.ivWrite
             )
             if (item.isNotificationSupported) {
-                holder.vb.ivNotify.setImageResource(
+                vb.ivNotify.setImageResource(
                     if (
                         item.isNotificationEnabled
                     ) R.drawable.ic_download_multiple_disable_24 else R.drawable.ic_download_multiple_24
                 )
-                holder.vb.descriptors.adapter = DescriptorAdapter(address, item.descriptors)
-                visible(holder.vb.ivNotify, holder.vb.tvDescriptorsTitle, holder.vb.descriptors)
+                vb.descriptors.adapter = DescriptorAdapter(address, item.descriptors)
+                visible(vb.ivNotify, vb.tvDescriptorsTitle, vb.descriptors)
             } else {
-                gone(holder.vb.ivNotify, holder.vb.tvDescriptorsTitle, holder.vb.descriptors)
+                gone(vb.ivNotify, vb.tvDescriptorsTitle, vb.descriptors)
             }
             manager.obtain(address).characteristic(item.uuid).observeOn(
                 AndroidSchedulers.mainThread()
             ).subscribe(object : TTObserver<BluetoothGattCharacteristic>(holder.disposables) {
                 override fun onNext(t: BluetoothGattCharacteristic) {
-                    holder.vb.tvValue.text = t.value.hex(true)
-                    visible(holder.vb.tvValueTitle, holder.vb.tvValue)
+                    vb.tvValue.text = t.value.hex(true)
+                    visible(vb.tvValueTitle, vb.tvValue)
                 }
             })
             setClickListener(
-                holder, item, clickListener, holder.vb.ivRead, holder.vb.ivWrite, holder.vb.ivNotify
+                clickListener, holder as TTHolder<ItemCharacteristicBinding>, item,
+                vb.ivRead, vb.ivWrite, vb.ivNotify
             )
         }
     }

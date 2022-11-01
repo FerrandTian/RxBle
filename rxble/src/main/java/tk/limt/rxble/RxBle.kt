@@ -25,7 +25,6 @@ import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.kotlin.toObservable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import tk.limt.rxble.model.RxGatt.*
-import tk.limt.utils.hex
 import java.util.*
 
 /**

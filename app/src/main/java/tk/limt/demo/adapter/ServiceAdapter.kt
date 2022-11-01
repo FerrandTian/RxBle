@@ -18,6 +18,7 @@ package tk.limt.demo.adapter
 
 import android.bluetooth.BluetoothGattService
 import android.view.View
+import androidx.viewbinding.ViewBinding
 import tk.limt.demo.R
 import tk.limt.demo.databinding.ItemServiceBinding
 import tk.limt.rxble.GattAttributes
@@ -35,7 +36,7 @@ class ServiceAdapter(
         override fun onClick(
             view: View,
             holder: TTHolder<ItemServiceBinding>,
-            item: BluetoothGattService?
+            t: BluetoothGattService?
         ) {
             holder.vb.llCharacteristics.visibility = if (
                 holder.vb.llCharacteristics.isShown
@@ -43,24 +44,26 @@ class ServiceAdapter(
         }
     }
 
-    override fun onBindViewHolder(holder: TTHolder<*>, position: Int) {
+    override fun onBindViewHolder(holder: TTHolder<ViewBinding>, position: Int) {
         if (holder.vb is ItemServiceBinding) {
-            holder as TTHolder<ItemServiceBinding>
+            val vb = holder.vb as ItemServiceBinding
             val item = items[position]
-            holder.vb.tvName.text = GattAttributes.lookup(
+            vb.tvName.text = GattAttributes.lookup(
                 item.uuid.toString(), ctx.getString(R.string.unknown_service)
             )
-            holder.vb.tvUuid.text = item.uuid.toString()
-            holder.vb.tvType.setText(if (item.type == BluetoothGattService.SERVICE_TYPE_PRIMARY) R.string.primary_service else R.string.secondary_service)
+            vb.tvUuid.text = item.uuid.toString()
+            vb.tvType.setText(if (item.type == BluetoothGattService.SERVICE_TYPE_PRIMARY) R.string.primary_service else R.string.secondary_service)
             if (item.characteristics.isNotEmpty()) {
-                holder.vb.recycler.adapter = CharacteristicAdapter(address, item.characteristics)
-                gone(holder.vb.tvEmpty)
-                visible(holder.vb.recycler)
+                vb.recycler.adapter = CharacteristicAdapter(address, item.characteristics)
+                gone(vb.tvEmpty)
+                visible(vb.recycler)
             } else {
-                gone(holder.vb.recycler)
-                visible(holder.vb.tvEmpty)
+                gone(vb.recycler)
+                visible(vb.tvEmpty)
             }
-            setClickListener(holder, item, clickListener, holder.vb.service)
+            setClickListener(
+                clickListener, holder as TTHolder<ItemServiceBinding>, item, vb.service
+            )
         }
     }
 }

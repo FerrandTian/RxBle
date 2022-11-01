@@ -103,10 +103,10 @@ class ScanFragment : TTFragment<RefreshRecyclerBinding>(), SwipeRefreshLayout.On
     }
 
     override fun onClick(
-        view: View, holder: TTHolder<ItemScanBinding>, item: ScanResult?
+        view: View, holder: TTHolder<ItemScanBinding>, t: ScanResult?
     ) {
         if (view == holder.vb.connect) {
-            item?.let { (ctx as OnTabChangeListener<BluetoothDevice>).onTabChange(it.device, true) }
+            t?.let { (ctx as OnTabChangeListener<BluetoothDevice>).onTabChange(it.device, true) }
         }
     }
 

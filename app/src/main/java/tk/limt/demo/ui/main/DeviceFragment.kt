@@ -135,7 +135,7 @@ class DeviceFragment : TTFragment<RefreshRecyclerBinding>(),
     override fun onClick(
         view: View,
         holder: TTHolder<ItemServiceBinding>,
-        item: BluetoothGattService?
+        t: BluetoothGattService?
     ) {
     }
 

@@ -18,6 +18,7 @@ package tk.limt.demo.adapter
 
 import android.bluetooth.BluetoothGattDescriptor
 import android.view.View
+import androidx.viewbinding.ViewBinding
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import tk.limt.demo.R
 import tk.limt.demo.data.DeviceManager
@@ -40,40 +41,43 @@ class DescriptorAdapter(
     private val clickListener = object :
         TTOnClickListener<ItemDescriptorBinding, BluetoothGattDescriptor> {
         override fun onClick(
-            view: View, holder: TTHolder<ItemDescriptorBinding>, item: BluetoothGattDescriptor?
+            view: View, holder: TTHolder<ItemDescriptorBinding>, t: BluetoothGattDescriptor?
         ) {
-            item?.let {
-                manager.obtain(address).read(it).observeOn(AndroidSchedulers.mainThread()).subscribe(
-                    object : TTSingleObserver<BluetoothGattDescriptor>(holder.disposables) {
-                        override fun onSuccess(t: BluetoothGattDescriptor) {
-                            super.onSuccess(t)
-                            holder.vb.tvValue.text = t.value.hex(true)
-                            visible(holder.vb.tvValueTitle, holder.vb.tvValue)
-                        }
+            t?.let {
+                manager.obtain(address).read(it).observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        object : TTSingleObserver<BluetoothGattDescriptor>(holder.disposables) {
+                            override fun onSuccess(t: BluetoothGattDescriptor) {
+                                super.onSuccess(t)
+                                holder.vb.tvValue.text = t.value.hex(true)
+                                visible(holder.vb.tvValueTitle, holder.vb.tvValue)
+                            }
 
-                        override fun onError(e: Throwable) {
-                            super.onError(e)
-                            e.message?.let { it -> ctx.toast(it) }
+                            override fun onError(e: Throwable) {
+                                super.onError(e)
+                                e.message?.let { it -> ctx.toast(it) }
+                            }
                         }
-                    }
-                )
+                    )
             }
         }
     }
 
-    override fun onBindViewHolder(holder: TTHolder<*>, position: Int) {
+    override fun onBindViewHolder(holder: TTHolder<ViewBinding>, position: Int) {
         if (holder.vb is ItemDescriptorBinding) {
-            holder as TTHolder<ItemDescriptorBinding>
+            val vb = holder.vb as ItemDescriptorBinding
             val item = items[position]
-            holder.vb.tvName.text = GattAttributes.lookup(
+            vb.tvName.text = GattAttributes.lookup(
                 item.uuid.toString(), ctx.getString(R.string.unknown_descriptor)
             )
-            holder.vb.tvUuid.text = item.uuid.toString()
+            vb.tvUuid.text = item.uuid.toString()
             item.value?.let {
-                holder.vb.tvValue.text = it.hex(true)
-                visible(holder.vb.tvValueTitle, holder.vb.tvValue)
-            } ?: run { gone(holder.vb.tvValueTitle, holder.vb.tvValue) }
-            setClickListener(holder, item, clickListener, holder.vb.ivRead)
+                vb.tvValue.text = it.hex(true)
+                visible(vb.tvValueTitle, vb.tvValue)
+            } ?: run { gone(vb.tvValueTitle, vb.tvValue) }
+            setClickListener(
+                clickListener, holder as TTHolder<ItemDescriptorBinding>, item, vb.ivRead
+            )
         }
     }
 }

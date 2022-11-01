@@ -29,9 +29,9 @@ import java.lang.reflect.ParameterizedType
  */
 abstract class TTAdapter<B : ViewBinding, T>(
     protected val items: MutableList<T> = ArrayList()
-) : RecyclerView.Adapter<TTHolder<*>>(), MutableList<T> by items {
+) : RecyclerView.Adapter<TTHolder<ViewBinding>>(), MutableList<T> by items {
     val parameterizedType = javaClass.genericSuperclass as ParameterizedType
-    val viewBindingClass = parameterizedType.actualTypeArguments[0] as Class<out B>
+    val viewBindingClass = parameterizedType.actualTypeArguments[0] as Class<B>
     val inflateMethod = viewBindingClass.getDeclaredMethod(
         "inflate",
         LayoutInflater::class.java,
@@ -55,19 +55,21 @@ abstract class TTAdapter<B : ViewBinding, T>(
         recycler = view
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TTHolder<*> {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TTHolder<ViewBinding> {
         return TTHolder(inflateMethod.invoke(null, LayoutInflater.from(ctx), parent, false) as B)
     }
 
-    override fun onViewRecycled(holder: TTHolder<*>) {
+    override fun onViewRecycled(holder: TTHolder<ViewBinding>) {
         super.onViewRecycled(holder)
         holder.disposables.disposeAll()
     }
 
-    protected fun setClickListener(
-        holder: TTHolder<B>, item: T?, listener: TTOnClickListener<B, T>, vararg views: View
-    ) {
-        val l = View.OnClickListener { v -> listener.onClick(v, holder, item) }
-        for (v in views) v.setOnClickListener(l)
+    companion object {
+        fun <B : ViewBinding, T> setClickListener(
+            listener: TTOnClickListener<B, T>, holder: TTHolder<B>, t: T?, vararg views: View
+        ) {
+            val l = View.OnClickListener { v -> listener.onClick(v, holder, t) }
+            for (v in views) v.setOnClickListener(l)
+        }
     }
 }

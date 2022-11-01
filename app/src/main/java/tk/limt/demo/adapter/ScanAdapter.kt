@@ -19,6 +19,7 @@ package tk.limt.demo.adapter
 import android.bluetooth.le.ScanResult
 import android.os.Build
 import android.view.View
+import androidx.viewbinding.ViewBinding
 import tk.limt.demo.databinding.ItemScanBinding
 import tk.limt.demo.displayName
 import tt.tt.component.TTAdapter
@@ -44,19 +45,22 @@ class ScanAdapter(
         }
     var list: MutableList<ScanResult> = items
 
-    override fun onBindViewHolder(holder: TTHolder<*>, position: Int) {
+    override fun onBindViewHolder(holder: TTHolder<ViewBinding>, position: Int) {
         if (holder.vb is ItemScanBinding) {
-            holder as TTHolder<ItemScanBinding>
+            val vb = holder.vb as ItemScanBinding
             val item = list[position]
             item.device?.let {
-                holder.vb.tvAddress.text = it.address
+                vb.tvAddress.text = it.address
             }
-            holder.vb.tvName.text = item.displayName ?: "N/A"
-            holder.vb.tvRssi.text = "${item.rssi} dBm"
+            vb.tvName.text = item.displayName ?: "N/A"
+            vb.tvRssi.text = "${item.rssi} dBm"
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                holder.vb.connect.visibility = if (item.isConnectable) View.VISIBLE else View.GONE
+                vb.connect.visibility = if (item.isConnectable) View.VISIBLE else View.GONE
             }
-            setClickListener(holder, item, clickListener, holder.itemView, holder.vb.connect)
+            setClickListener(
+                clickListener, holder as TTHolder<ItemScanBinding>, item,
+                holder.itemView, vb.connect
+            )
         }
     }
 
