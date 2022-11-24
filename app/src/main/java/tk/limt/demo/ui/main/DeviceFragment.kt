@@ -107,10 +107,10 @@ class DeviceFragment : TTFragment<RefreshRecyclerBinding>(),
         if (checkPermissions() && checkBluetooth()) {
             (if (manager.obtain(device.address).isDisconnected) manager.obtain(device.address)
                 .connectWithState().timeout(8, TimeUnit.SECONDS).retry(
-                2
-            ).filter {
-                it == BluetoothProfile.STATE_CONNECTED
-            }.firstOrError() else Single.just(BluetoothProfile.STATE_CONNECTED)).flatMap {
+                    2
+                ).filter {
+                    it == BluetoothProfile.STATE_CONNECTED
+                }.firstOrError() else Single.just(BluetoothProfile.STATE_CONNECTED)).flatMap {
                 manager.obtain(device.address).discoverServices()
             }.observeOn(
                 AndroidSchedulers.mainThread()
@@ -132,11 +132,7 @@ class DeviceFragment : TTFragment<RefreshRecyclerBinding>(),
         } else vb.refresh.isRefreshing = false
     }
 
-    override fun onClick(
-        view: View,
-        holder: TTHolder<ItemServiceBinding>,
-        t: BluetoothGattService?
-    ) {
+    override fun onClick(v: View, h: TTHolder<ItemServiceBinding>, t: BluetoothGattService?) {
     }
 
     fun updateUiWithData(state: Int) {

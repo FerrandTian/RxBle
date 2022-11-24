@@ -23,6 +23,7 @@ import io.reactivex.rxjava3.disposables.Disposable
  * @author tianfeng
  */
 abstract class TTCompletableObserver(var set: TTDisposables? = null) : CompletableObserver {
+    @JvmField
     var disposable: Disposable? = null
 
     override fun onSubscribe(d: Disposable) {

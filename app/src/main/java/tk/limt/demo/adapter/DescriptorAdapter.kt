@@ -41,16 +41,16 @@ class DescriptorAdapter(
     private val clickListener = object :
         TTOnClickListener<ItemDescriptorBinding, BluetoothGattDescriptor> {
         override fun onClick(
-            view: View, holder: TTHolder<ItemDescriptorBinding>, t: BluetoothGattDescriptor?
+            v: View, h: TTHolder<ItemDescriptorBinding>, t: BluetoothGattDescriptor?
         ) {
             t?.let {
                 manager.obtain(address).read(it).observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
-                        object : TTSingleObserver<BluetoothGattDescriptor>(holder.disposables) {
+                        object : TTSingleObserver<BluetoothGattDescriptor>(h.disposables) {
                             override fun onSuccess(t: BluetoothGattDescriptor) {
                                 super.onSuccess(t)
-                                holder.vb.tvValue.text = t.value.hex(true)
-                                visible(holder.vb.tvValueTitle, holder.vb.tvValue)
+                                h.vb.tvValue.text = t.value.hex(true)
+                                visible(h.vb.tvValueTitle, h.vb.tvValue)
                             }
 
                             override fun onError(e: Throwable) {

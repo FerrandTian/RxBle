@@ -18,8 +18,10 @@ package tt.tt.component
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.selection.*
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import java.lang.reflect.ParameterizedType
@@ -28,18 +30,129 @@ import java.lang.reflect.ParameterizedType
  * @author tianfeng
  */
 abstract class TTAdapter<B : ViewBinding, T>(
-    protected val items: MutableList<T> = ArrayList()
-) : RecyclerView.Adapter<TTHolder<ViewBinding>>(), MutableList<T> by items {
-    val parameterizedType = javaClass.genericSuperclass as ParameterizedType
-    val viewBindingClass = parameterizedType.actualTypeArguments[0] as Class<B>
-    val inflateMethod = viewBindingClass.getDeclaredMethod(
-        "inflate",
-        LayoutInflater::class.java,
-        ViewGroup::class.java,
-        Boolean::class.javaPrimitiveType
-    )
-    lateinit var ctx: Context
+    val items: MutableList<T> = ArrayList(),
+) : RecyclerView.Adapter<TTHolder<ViewBinding>>() {
+    private val parameterizedType = javaClass.genericSuperclass as ParameterizedType
+    private val viewBindingClass = parameterizedType.actualTypeArguments[0] as Class<B>
+    private val inflate = viewBindingClass.getDeclaredMethod("inflate", LayoutInflater::class.java,
+        ViewGroup::class.java, Boolean::class.javaPrimitiveType)
     lateinit var recycler: RecyclerView
+    lateinit var ctx: Context
+    var tracker: SelectionTracker<Long>? = null
+    val observer = object : SelectionTracker.SelectionObserver<Long>() {
+        var state = false
+        override fun onItemStateChanged(key: Long, selected: Boolean) {}
+
+        override fun onSelectionRefresh() {}
+
+        override fun onSelectionChanged() {
+            val newState = hasSelection
+            if (newState != state) {
+                state = newState
+                recycler.post { notifyDataSetChanged() }
+            }
+        }
+
+        override fun onSelectionRestored() {}
+    }
+    val hasSelection: Boolean
+        get() = tracker?.hasSelection() == true
+    val selectionSize: Int
+        get() = tracker?.selection?.size() ?: 0
+    val selection: Iterable<T>
+        get() = tracker?.selection?.map {
+            items[it.toInt()]
+        } ?: ArrayList()
+    val itemKeyProvider = object : ItemKeyProvider<Long>(SCOPE_MAPPED) {
+        override fun getKey(position: Int): Long {
+            return getItemId(position)
+        }
+
+        override fun getPosition(key: Long): Int {
+            return recycler.findViewHolderForItemId(key).bindingAdapterPosition
+        }
+    }
+    val itemDetailsLookup = object : ItemDetailsLookup<Long>() {
+        override fun getItemDetails(event: MotionEvent): ItemDetails<Long>? {
+            return recycler.findChildViewUnder(event.x, event.y)?.let {
+                (recycler.getChildViewHolder(it) as TTHolder<*>).itemDetails
+            }
+        }
+    }
+
+    init {
+        this.setHasStableIds(true)
+    }
+
+    open fun getItem(position: Int): T? {
+        return if (
+            items.size > 0 && position >= 0 && position < items.size
+        ) items[position] else null
+    }
+
+    open fun getItem(key: Long): T? {
+        return getItem(key.toInt())
+    }
+
+    open fun isSelected(key: Long?): Boolean {
+        return tracker?.isSelected(key) == true
+    }
+
+    open fun enableSelection(
+        predicates: SelectionTracker.SelectionPredicate<Long>,
+        obs: SelectionTracker.SelectionObserver<Long>,
+    ) {
+        SelectionTracker.Builder(
+            this.javaClass.name, recycler, itemKeyProvider, itemDetailsLookup,
+            StorageStrategy.createLongStorage()
+        ).withSelectionPredicate(predicates).build().apply {
+            this.addObserver(observer)
+            this.addObserver(obs)
+            tracker = this
+        }
+    }
+
+    open fun clearSelection() {
+        tracker?.clearSelection()
+    }
+
+    open fun setItems(ts: Collection<T>): Boolean {
+        clearSelection()
+        items.clear()
+        return items.addAll(ts).also {
+            notifyDataSetChanged()
+        }
+    }
+
+    open fun add(t: T): Boolean {
+        return items.add(t).also {
+            if (it) notifyItemInserted(items.size - 1)
+        }
+    }
+
+    open fun update(t: T): T? {
+        val i = items.indexOf(t)
+        return if (i >= 0) items.set(i, t).also {
+            notifyItemChanged(i)
+        } else null
+    }
+
+    open fun put(t: T): Boolean {
+        return if (update(t) == null) add(t) else false
+    }
+
+    open fun addAll(ts: Collection<T>): Boolean {
+        val start = items.size
+        return items.addAll(ts).also {
+            if (it) notifyItemRangeInserted(start, ts.size)
+        }
+    }
+
+    open fun clear() {
+        clearSelection()
+        items.clear()
+        notifyDataSetChanged()
+    }
 
     override fun getItemCount(): Int {
         return items.size
@@ -49,14 +162,18 @@ abstract class TTAdapter<B : ViewBinding, T>(
         return TTHolder.viewType(viewBindingClass)
     }
 
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
+    }
+
     override fun onAttachedToRecyclerView(view: RecyclerView) {
         super.onAttachedToRecyclerView(view)
-        ctx = view.context
         recycler = view
+        ctx = view.context
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TTHolder<ViewBinding> {
-        return TTHolder(inflateMethod.invoke(null, LayoutInflater.from(ctx), parent, false) as B)
+        return TTHolder(inflate.invoke(null, LayoutInflater.from(ctx), parent, false) as B)
     }
 
     override fun onViewRecycled(holder: TTHolder<ViewBinding>) {
@@ -66,10 +183,17 @@ abstract class TTAdapter<B : ViewBinding, T>(
 
     companion object {
         fun <B : ViewBinding, T> setClickListener(
-            listener: TTOnClickListener<B, T>, holder: TTHolder<B>, t: T?, vararg views: View
+            listener: TTOnClickListener<B, T>, holder: TTHolder<B>, t: T?, vararg views: View,
         ) {
             val l = View.OnClickListener { v -> listener.onClick(v, holder, t) }
             for (v in views) v.setOnClickListener(l)
+        }
+
+        fun <B : ViewBinding, T> setLongClickListener(
+            listener: TTOnLongClickListener<B, T>, holder: TTHolder<B>, t: T?, vararg views: View,
+        ) {
+            val l = View.OnLongClickListener { v -> listener.onLongClick(v, holder, t) }
+            for (v in views) v.setOnLongClickListener(l)
         }
     }
 }

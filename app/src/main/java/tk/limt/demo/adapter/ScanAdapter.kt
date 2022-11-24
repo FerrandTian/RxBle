@@ -64,19 +64,19 @@ class ScanAdapter(
         }
     }
 
-    fun put(element: ScanResult) {
-        val index = items.deviceIndexOf(element)
-        if (index >= 0) items[index] = element else items.add(element)
+    override fun put(t: ScanResult): Boolean {
+        val index = items.deviceIndexOf(t)
+        if (index >= 0) items[index] = t else items.add(t)
         if (keyword?.isNotEmpty() == true) {
             keyword?.let { key ->
-                val name = element.displayName
+                val name = t.displayName
                 if (name?.isNotEmpty() == true && name.contains(key, true)) {
-                    val position = list.deviceIndexOf(element)
+                    val position = list.deviceIndexOf(t)
                     if (position >= 0) {
-                        list[position] = element
+                        list[position] = t
                         notifyItemChanged(position)
                     } else {
-                        list.add(element)
+                        list.add(t)
                         notifyItemInserted(itemCount - 1)
                     }
                 }
@@ -84,6 +84,7 @@ class ScanAdapter(
         } else {
             if (index >= 0) notifyItemChanged(index) else notifyItemInserted(list.size - 1)
         }
+        return true
     }
 
     override fun getItemCount(): Int {

@@ -29,15 +29,20 @@ import java.lang.reflect.ParameterizedType
  * @author tianfeng
  */
 abstract class TTActivity<B : ViewBinding> : AppCompatActivity() {
+    @JvmField
     val log = TTLog(this.javaClass.simpleName)
+
+    @JvmField
     val disposables = TTDisposables()
-    val ctx: AppCompatActivity
-        get() = this
-    lateinit var vb: B
+
+    @JvmField
+    val ctx  = this
     lateinit var vmp: ViewModelProvider
+    lateinit var vb: B
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        vmp = ViewModelProvider(this)
         try {
             val type = javaClass.genericSuperclass as ParameterizedType
             val clazzVB = type.actualTypeArguments[0] as Class<B>
@@ -47,7 +52,6 @@ abstract class TTActivity<B : ViewBinding> : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        vmp = ViewModelProvider(this)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

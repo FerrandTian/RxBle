@@ -24,9 +24,13 @@ import tt.tt.rx.TTDisposables
  * @author tianfeng
  */
 abstract class TTService : Service() {
+    @JvmField
     val log = TTLog(this.javaClass.simpleName)
-    val ctx: Context
-        get() = this
+
+    @JvmField
+    val ctx: Context = this
+
+    @JvmField
     val disposables = TTDisposables()
 
     override fun onDestroy() {

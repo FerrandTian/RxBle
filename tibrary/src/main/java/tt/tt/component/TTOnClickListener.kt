@@ -23,5 +23,5 @@ import androidx.viewbinding.ViewBinding
  * @author tianfeng
  */
 interface TTOnClickListener<B : ViewBinding, T> {
-    fun onClick(view: View, holder: TTHolder<B>, t: T?)
+    fun onClick(v: View, h: TTHolder<B>, t: T?)
 }

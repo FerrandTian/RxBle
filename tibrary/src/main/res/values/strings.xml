@@ -28,6 +28,7 @@
     <string name="tt_cancel">Cancel</string>
     <string name="tt_close">Close</string>
     <string name="tt_connect">Connect</string>
+    <string name="tt_connecting">Connecting</string>
     <string name="tt_complete">Complete</string>
     <string name="tt_delete">Delete</string>
     <string name="tt_device">Device</string>
@@ -51,6 +52,8 @@
     <string name="tt_ok">OK</string>
     <string name="tt_on">On</string>
     <string name="tt_other">Other</string>
+    <string name="tt_password">Password</string>
+    <string name="tt_reconnect">Reconnect</string>
     <string name="tt_refresh">Refresh</string>
     <string name="tt_save">Save</string>
     <string name="tt_search">Search</string>

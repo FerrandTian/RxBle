@@ -16,6 +16,7 @@
 
 package tt.tt.component
 
+import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import tt.tt.rx.TTDisposables
@@ -24,7 +25,19 @@ import tt.tt.rx.TTDisposables
  * @author tianfeng
  */
 class TTHolder<B : ViewBinding>(val vb: B) : RecyclerView.ViewHolder(vb.root) {
+    @JvmField
     val disposables = TTDisposables()
+
+    @JvmField
+    val itemDetails = object : ItemDetailsLookup.ItemDetails<Long>() {
+        override fun getPosition(): Int {
+            return bindingAdapterPosition
+        }
+
+        override fun getSelectionKey(): Long {
+            return itemId
+        }
+    }
 
     companion object {
         fun viewType(clazz: Class<out ViewBinding>?): Int {

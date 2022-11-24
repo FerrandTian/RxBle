@@ -31,10 +31,15 @@ import java.lang.reflect.ParameterizedType
  * @author tianfeng
  */
 abstract class TTFragment<B : ViewBinding> : Fragment() {
+    @JvmField
     val log = TTLog(this.javaClass.simpleName)
+
+    @JvmField
     val disposables = TTDisposables()
     val ctx: FragmentActivity
         get() = requireActivity()
+
+    @JvmField
     var _vb: B? = null
     val vb get() = _vb!!
     lateinit var vmp: ViewModelProvider
@@ -42,20 +47,17 @@ abstract class TTFragment<B : ViewBinding> : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
+        vmp = ViewModelProvider(this)
         try {
             val type = javaClass.genericSuperclass as ParameterizedType
             val clazzVB = type.actualTypeArguments[0] as Class<B>
             val inflate = clazzVB.getDeclaredMethod(
-                "inflate",
-                LayoutInflater::class.java,
-                ViewGroup::class.java,
-                Boolean::class.java
+                "inflate", LayoutInflater::class.java, ViewGroup::class.java, Boolean::class.java
             )
             _vb = inflate.invoke(null, inflater, container, false) as B
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        vmp = ViewModelProvider(this)
         return _vb?.root
     }
 

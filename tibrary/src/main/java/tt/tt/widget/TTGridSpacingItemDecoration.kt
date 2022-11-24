@@ -18,19 +18,18 @@ package tt.tt.widget
 
 import android.graphics.Rect
 import android.view.View
-import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 
 /**
  * @author tianfeng
  */
 class TTGridSpacingItemDecoration(
-    val spanCount: Int,
-    val spacing: Int,
-    val includeEdge: Boolean = true
-) : ItemDecoration() {
+    var spanCount: Int,
+    var spacing: Int,
+    var includeEdge: Boolean = true,
+) : RecyclerView.ItemDecoration() {
     override fun getItemOffsets(
-        outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State
+        outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State,
     ) {
         val position = parent.getChildAdapterPosition(view)
         val column = position % spanCount

@@ -18,7 +18,6 @@ package tt.tt.widget
 
 import android.graphics.Rect
 import android.view.View
-import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 
 /**
@@ -27,13 +26,12 @@ import androidx.recyclerview.widget.RecyclerView
  * @author tianfeng
  */
 class TTSpacingItemDecoration(
-    val spacing: Int,
-    @RecyclerView.Orientation val orientation: Int = RecyclerView.VERTICAL,
-    val includeEdge: Boolean = false
-) : ItemDecoration() {
-
+    var spacing: Int,
+    @RecyclerView.Orientation var orientation: Int = RecyclerView.VERTICAL,
+    var includeEdge: Boolean = true,
+) : RecyclerView.ItemDecoration() {
     override fun getItemOffsets(
-        outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State
+        outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State,
     ) {
         super.getItemOffsets(outRect, view, parent, state)
         val position = parent.getChildAdapterPosition(view)
