@@ -34,7 +34,7 @@ android {
 }
 
 dependencies {
-    implementation project(path: ':tibrary')
+    implementation project(path: ':ttbase')
     implementation project(path: ':rxble')
     implementation "androidx.appcompat:appcompat:$appcompat_version"
     implementation "androidx.appcompat:appcompat-resources:$appcompat_version"
