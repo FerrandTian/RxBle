@@ -44,8 +44,8 @@ abstract class TTFragment<B : ViewBinding> : Fragment() {
     val vb get() = _vb!!
     lateinit var vmp: ViewModelProvider
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
         vmp = ViewModelProvider(this)
     }
 
