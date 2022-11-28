@@ -44,10 +44,14 @@ abstract class TTFragment<B : ViewBinding> : Fragment() {
     val vb get() = _vb!!
     lateinit var vmp: ViewModelProvider
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        vmp = ViewModelProvider(this)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        vmp = ViewModelProvider(this)
         try {
             val type = javaClass.genericSuperclass as ParameterizedType
             val clazzVB = type.actualTypeArguments[0] as Class<B>
