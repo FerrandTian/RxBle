@@ -23,9 +23,11 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.graphics.Color
 import android.os.Build
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.Checkable
 import android.widget.CompoundButton
 import android.widget.CompoundButton.OnCheckedChangeListener
 import android.widget.PopupWindow
@@ -111,6 +113,14 @@ fun <T : View> clickable(clickable: Boolean, vararg views: T) {
 
 fun <T : View> enable(enabled: Boolean, vararg views: T) {
     for (v in views) v.isEnabled = enabled
+}
+
+fun <T : MenuItem> check(checked: Boolean, vararg views: T) {
+    for (v in views) v.isChecked = checked
+}
+
+fun <T : Checkable> check(checked: Boolean, vararg views: T) {
+    for (v in views) v.isChecked = checked
 }
 
 fun <T : CompoundButton> checkListener(l: OnCheckedChangeListener?, vararg views: T) {
