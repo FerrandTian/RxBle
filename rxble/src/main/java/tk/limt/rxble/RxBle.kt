@@ -83,9 +83,8 @@ class RxBle(
     fun getService(uuid: UUID) = source.gatt.getService(uuid)
 
     /**
-     * Close this Bluetooth GATT client. Application will not receive any emits from
-     * this remote device after call this method.
-     *
+     * Dispose all resources and close this Bluetooth GATT client. Application will not
+     * receive any emits from this remote device after call this method.
      * Application should call this method as early as possible after it is done with
      * this GATT client.
      */

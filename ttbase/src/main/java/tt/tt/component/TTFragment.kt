@@ -16,6 +16,7 @@
 
 package tt.tt.component
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -36,13 +37,12 @@ abstract class TTFragment<B : ViewBinding> : Fragment() {
 
     @JvmField
     val disposables = TTDisposables()
+
+    @get:JvmName("ctx")
     val ctx: FragmentActivity
         get() = requireActivity()
-
-    @JvmField
-    var _vb: B? = null
-    val vb get() = _vb!!
     lateinit var vmp: ViewModelProvider
+    lateinit var vb: B
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -51,23 +51,22 @@ abstract class TTFragment<B : ViewBinding> : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         try {
             val type = javaClass.genericSuperclass as ParameterizedType
             val clazzVB = type.actualTypeArguments[0] as Class<B>
             val inflate = clazzVB.getDeclaredMethod(
                 "inflate", LayoutInflater::class.java, ViewGroup::class.java, Boolean::class.java
             )
-            _vb = inflate.invoke(null, inflater, container, false) as B
+            vb = inflate.invoke(null, inflater, container, false) as B
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return _vb?.root
+        return vb.root
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         disposables.disposeAll()
-        _vb = null
     }
 }

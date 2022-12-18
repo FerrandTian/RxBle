@@ -24,7 +24,7 @@ import tt.tt.rx.TTDisposables
 /**
  * @author tianfeng
  */
-class TTHolder<B : ViewBinding>(val vb: B) : RecyclerView.ViewHolder(vb.root) {
+class TTHolder<B : ViewBinding>(@JvmField val vb: B) : RecyclerView.ViewHolder(vb.root) {
     @JvmField
     val disposables = TTDisposables()
 
@@ -40,6 +40,7 @@ class TTHolder<B : ViewBinding>(val vb: B) : RecyclerView.ViewHolder(vb.root) {
     }
 
     companion object {
+        @JvmStatic
         fun viewType(clazz: Class<out ViewBinding>?): Int {
             return clazz?.hashCode() ?: RecyclerView.INVALID_TYPE
         }

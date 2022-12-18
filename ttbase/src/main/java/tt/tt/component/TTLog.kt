@@ -21,124 +21,215 @@ import android.util.Log
 /**
  * @author tianfeng
  */
-class TTLog(val tag: String = "TTLog") {
+class TTLog(@JvmField var tag: String = "TTLog") {
     @JvmField
     var debug = false
 
     /**
-     * 封装Log.v()
+     * Send a {@link android.util.Log#VERBOSE} log message.
+     *
+     * @param msg The message you would like logged.
+     * @return The number of bytes written.
+     */
+    fun v(msg: String) = v(tag, msg)
+
+    /**
+     * Send a {@link android.util.Log#VERBOSE} log message.
      *
      * @param tag Used to identify the source of a log message.  It usually identifies
      * the class or activity where the log call occurs.
      * @param msg The message you would like logged.
+     * @return The number of bytes written.
      */
-    fun v(tag: String?, msg: String) {
-        if (debug) Log.v(tag, msg)
-    }
+    fun v(tag: String, msg: String) = if (debug) Log.v(tag, msg) else 0
 
     /**
-     * 封装Log.v()，使用默认的TAG
+     * Send a {@link android.util.Log#VERBOSE} log message and log the exception.
      *
      * @param msg The message you would like logged.
+     * @param tr An exception to log
+     * @return The number of bytes written.
      */
-    fun v(msg: String) {
-        if (debug) Log.v(tag, msg)
-    }
+    fun v(msg: String, tr: Throwable) = v(tag, msg, tr)
 
     /**
-     * 封装Log.d()
-     *
-     * @param tag Used to identify the source of a log message.  It usually identifies
-     * the class or activity where the log call occurs.
-     * @param msg The message you would like logged.
-     */
-    fun d(tag: String?, msg: String) {
-        if (debug) Log.d(tag, msg)
-    }
-
-    /**
-     * 封装Log.d()，使用默认的TAG
-     *
-     * @param msg The message you would like logged.
-     */
-    fun d(msg: String) {
-        if (debug) Log.d(tag, msg)
-    }
-
-    /**
-     * 封装Log.i()
+     * Send a {@link android.util.Log#VERBOSE} log message and log the exception.
      *
      * @param tag Used to identify the source of a log message.  It usually identifies
      * the class or activity where the log call occurs.
      * @param msg The message you would like logged.
+     * @param tr An exception to log
+     * @return The number of bytes written.
      */
-    fun i(tag: String?, msg: String) {
-        if (debug) Log.i(tag, msg)
-    }
+    fun v(tag: String, msg: String, tr: Throwable) = if (debug) Log.v(tag, msg, tr) else 0
 
     /**
-     * 封装Log.i()，使用默认的TAG
+     * Send a {@link android.util.Log#DEBUG} log message.
      *
      * @param msg The message you would like logged.
+     * @return The number of bytes written.
      */
-    fun i(msg: String) {
-        if (debug) Log.i(tag, msg)
-    }
+    fun d(msg: String) = d(tag, msg)
 
     /**
-     * 封装Log.w()
-     *
-     * @param tag Used to identify the source of a log message.  It usually identifies
-     * the class or activity where the log call occurs.
-     * @param msg The message you would like logged.
-     */
-    fun w(tag: String?, msg: String) {
-        if (debug) Log.w(tag, msg)
-    }
-
-    /**
-     * 封装Log.w()，使用默认的TAG
-     *
-     * @param msg The message you would like logged.
-     */
-    fun w(msg: String) {
-        if (debug) Log.w(tag, msg)
-    }
-
-    /**
-     * 封装Log.e()
+     * Send a {@link android.util.Log#DEBUG} log message.
      *
      * @param tag Used to identify the source of a log message.  It usually identifies
      * the class or activity where the log call occurs.
      * @param msg The message you would like logged.
+     * @return The number of bytes written.
      */
-    fun e(tag: String?, msg: String) {
-        if (debug) Log.e(tag, msg)
-    }
+    fun d(tag: String, msg: String) = if (debug) Log.d(tag, msg) else 0
 
     /**
-     * 封装Log.e()，使用默认的TAG
+     * Send a {@link android.util.Log#DEBUG} log message and log the exception.
      *
      * @param msg The message you would like logged.
+     * @param tr An exception to log
+     * @return The number of bytes written.
      */
-    fun e(msg: String) {
-        if (debug) Log.e(tag, msg)
-    }
+    fun d(msg: String, tr: Throwable) = d(tag, msg, tr)
 
     /**
-     * Send a [Log.ERROR] log message and log the exception.
+     * Send a {@link android.util.Log#DEBUG} log message and log the exception.
      *
      * @param tag Used to identify the source of a log message.  It usually identifies
      * the class or activity where the log call occurs.
      * @param msg The message you would like logged.
-     * @param t  An exception to log
+     * @param tr An exception to log
+     * @return The number of bytes written.
      */
-    fun e(tag: String?, msg: String?, t: Throwable?) {
-        if (debug) Log.e(tag, msg, t)
-    }
+    fun d(tag: String, msg: String, tr: Throwable) = if (debug) Log.d(tag, msg, tr) else 0
 
     /**
-     * 封装System.out.print()
+     * Send a {@link android.util.Log#INFO} log message.
+     *
+     * @param msg The message you would like logged.
+     * @return The number of bytes written.
+     */
+    fun i(msg: String) = i(tag, msg)
+
+    /**
+     * Send a {@link android.util.Log#INFO} log message.
+     *
+     * @param tag Used to identify the source of a log message.  It usually identifies
+     * the class or activity where the log call occurs.
+     * @param msg The message you would like logged.
+     * @return The number of bytes written.
+     */
+    fun i(tag: String, msg: String) = if (debug) Log.i(tag, msg) else 0
+
+    /**
+     * Send a {@link android.util.Log#INFO} log message and log the exception.
+     *
+     * @param msg The message you would like logged.
+     * @param tr An exception to log
+     * @return The number of bytes written.
+     */
+    fun i(msg: String, tr: Throwable) = i(tag, msg, tr)
+
+    /**
+     * Send a {@link android.util.Log#INFO} log message and log the exception.
+     *
+     * @param tag Used to identify the source of a log message.  It usually identifies
+     * the class or activity where the log call occurs.
+     * @param msg The message you would like logged.
+     * @param tr An exception to log
+     * @return The number of bytes written.
+     */
+    fun i(tag: String, msg: String, tr: Throwable) = if (debug) Log.i(tag, msg, tr) else 0
+
+    /**
+     * Send a {@link android.util.Log#WARN} log message.
+     *
+     * @param msg The message you would like logged.
+     * @return The number of bytes written.
+     */
+    fun w(msg: String) = w(tag, msg)
+
+    /**
+     * Send a {@link android.util.Log#WARN} log message.
+     *
+     * @param tag Used to identify the source of a log message.  It usually identifies
+     * the class or activity where the log call occurs.
+     * @param msg The message you would like logged.
+     * @return The number of bytes written.
+     */
+    fun w(tag: String, msg: String) = if (debug) Log.w(tag, msg) else 0
+
+    /**
+     * Send a {@link android.util.Log#WARN} log message and log the exception.
+     *
+     * @param msg The message you would like logged.
+     * @param tr An exception to log
+     * @return The number of bytes written.
+     */
+    fun w(tr: Throwable) = w(null, tr)
+
+    /**
+     * Send a {@link android.util.Log#WARN} log message and log the exception.
+     *
+     * @param msg The message you would like logged.
+     * @param tr An exception to log
+     * @return The number of bytes written.
+     */
+    fun w(msg: String?, tr: Throwable) = w(tag, msg, tr)
+
+    /**
+     * Send a {@link android.util.Log#WARN} log message and log the exception.
+     *
+     * @param tag Used to identify the source of a log message.  It usually identifies
+     * the class or activity where the log call occurs.
+     * @param msg The message you would like logged.
+     * @param tr An exception to log
+     * @return The number of bytes written.
+     */
+    fun w(tag: String, msg: String?, tr: Throwable) = if (debug) {
+        if (msg != null) Log.w(
+            tag, msg, tr
+        ) else Log.w(tag, tr)
+    } else 0
+
+    /**
+     * Send a {@link android.util.Log#ERROR} log message.
+     *
+     * @param msg The message you would like logged.
+     * @return The number of bytes written.
+     */
+    fun e(msg: String) = e(tag, msg)
+
+    /**
+     * Send a {@link android.util.Log#ERROR} log message.
+     *
+     * @param tag Used to identify the source of a log message.  It usually identifies
+     * the class or activity where the log call occurs.
+     * @param msg The message you would like logged.
+     * @return The number of bytes written.
+     */
+    fun e(tag: String, msg: String) = if (debug) Log.e(tag, msg) else 0
+
+    /**
+     * Send a {@link android.util.Log#ERROR} log message and log the exception.
+     *
+     * @param msg The message you would like logged.
+     * @param tr An exception to log
+     * @return The number of bytes written.
+     */
+    fun e(msg: String, tr: Throwable) = e(tag, msg, tr)
+
+    /**
+     * Send a {@link android.util.Log#ERROR} log message and log the exception.
+     *
+     * @param tag Used to identify the source of a log message.  It usually identifies
+     * the class or activity where the log call occurs.
+     * @param msg The message you would like logged.
+     * @param tr An exception to log
+     * @return The number of bytes written.
+     */
+    fun e(tag: String, msg: String, tr: Throwable) = if (debug) Log.e(tag, msg, tr) else 0
+
+    /**
+     * Prints the given [msg] to the standard output stream.
      *
      * @param msg the string to print to the target stream.
      */
@@ -147,7 +238,7 @@ class TTLog(val tag: String = "TTLog") {
     }
 
     /**
-     * 封装System.out.println()
+     * Prints the given [msg] to the standard output stream.
      *
      * @param msg the string to print to the target stream.
      */

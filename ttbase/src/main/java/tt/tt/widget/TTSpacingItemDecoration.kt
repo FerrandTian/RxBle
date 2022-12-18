@@ -26,9 +26,9 @@ import androidx.recyclerview.widget.RecyclerView
  * @author tianfeng
  */
 class TTSpacingItemDecoration(
-    var spacing: Int,
-    @RecyclerView.Orientation var orientation: Int = RecyclerView.VERTICAL,
-    var includeEdge: Boolean = true,
+    @JvmField var spacing: Int,
+    @JvmField @RecyclerView.Orientation var orientation: Int = RecyclerView.VERTICAL,
+    @JvmField var includeEdge: Boolean = true,
 ) : RecyclerView.ItemDecoration() {
     override fun getItemOffsets(
         outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State,

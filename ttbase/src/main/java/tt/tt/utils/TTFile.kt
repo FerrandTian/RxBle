@@ -42,6 +42,17 @@ fun File.append(line: CharSequence) {
     }
 }
 
+fun File.append(lines: Iterable<CharSequence>) {
+    OutputStreamWriter(FileOutputStream(this, true)).apply {
+        lines.forEach {
+            append(it)
+        }
+        append("\r\n")
+        flush()
+        close()
+    }
+}
+
 fun mkdir(dir: File): Boolean = if (!dir.exists()) dir.mkdirs() else true
 
 fun create(file: File): Boolean {
@@ -297,6 +308,25 @@ fun save(dest: File, bytes: ByteArray, append: Boolean): Boolean {
         create(dest)
         output = FileOutputStream(dest, append)
         output.write(bytes, 0, bytes.size)
+        output.flush()
+        close(output)
+        return true
+    } catch (e: IOException) {
+        e.printStackTrace()
+    } finally {
+        close(output)
+    }
+    return false
+}
+
+fun save(dest: File, list: Iterable<ByteArray>, append: Boolean): Boolean {
+    var output: OutputStream? = null
+    try {
+        create(dest)
+        output = FileOutputStream(dest, append)
+        list.forEach {
+            output.write(it, 0, it.size)
+        }
         output.flush()
         close(output)
         return true

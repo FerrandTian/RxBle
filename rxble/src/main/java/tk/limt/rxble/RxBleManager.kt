@@ -23,9 +23,12 @@ import android.content.Context
 import io.reactivex.rxjava3.core.Observable
 import tk.limt.rxble.model.RxScanResult
 
-class RxBleManager(var ctx: Context) {
-    private var manager = ctx.getSystemService(BluetoothManager::class.java)
-    private var adapter: BluetoothAdapter = manager.adapter
+class RxBleManager(private val context: Context) {
+    @JvmField
+    var manager = context.getSystemService(BluetoothManager::class.java)
+
+    @JvmField
+    var adapter = manager.adapter
 
     /**
      * Get the current connection state of the GATT device.
@@ -234,7 +237,7 @@ class RxBleManager(var ctx: Context) {
      * @return The new {@code RxBle} instance.
      */
     fun create(device: BluetoothDevice, autoConnect: Boolean = false) = RxBle(
-        ctx, device, autoConnect
+        context, device, autoConnect
     )
 
     companion object {

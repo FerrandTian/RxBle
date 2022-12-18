@@ -30,15 +30,21 @@ import java.lang.reflect.ParameterizedType
  * @author tianfeng
  */
 abstract class TTAdapter<B : ViewBinding, T>(
-    val items: MutableList<T> = ArrayList(),
+    @JvmField val items: MutableList<T> = ArrayList(),
 ) : RecyclerView.Adapter<TTHolder<ViewBinding>>() {
     private val parameterizedType = javaClass.genericSuperclass as ParameterizedType
     private val viewBindingClass = parameterizedType.actualTypeArguments[0] as Class<B>
-    private val inflate = viewBindingClass.getDeclaredMethod("inflate", LayoutInflater::class.java,
-        ViewGroup::class.java, Boolean::class.javaPrimitiveType)
+    private val inflate = viewBindingClass.getDeclaredMethod(
+        "inflate", LayoutInflater::class.java,
+        ViewGroup::class.java, Boolean::class.javaPrimitiveType
+    )
     lateinit var recycler: RecyclerView
     lateinit var ctx: Context
+
+    @JvmField
     var tracker: SelectionTracker<Long>? = null
+
+    @JvmField
     val observer = object : SelectionTracker.SelectionObserver<Long>() {
         var state = false
         override fun onItemStateChanged(key: Long, selected: Boolean) {}
@@ -55,14 +61,22 @@ abstract class TTAdapter<B : ViewBinding, T>(
 
         override fun onSelectionRestored() {}
     }
+
+    @get:JvmName("hasSelection")
     val hasSelection: Boolean
         get() = tracker?.hasSelection() == true
+
+    @get:JvmName("selectionSize")
     val selectionSize: Int
         get() = tracker?.selection?.size() ?: 0
+
+    @get:JvmName("selection")
     val selection: Iterable<T>
         get() = tracker?.selection?.map {
             items[it.toInt()]
         } ?: ArrayList()
+
+    @JvmField
     val itemKeyProvider = object : ItemKeyProvider<Long>(SCOPE_MAPPED) {
         override fun getKey(position: Int): Long {
             return getItemId(position)
@@ -72,6 +86,8 @@ abstract class TTAdapter<B : ViewBinding, T>(
             return recycler.findViewHolderForItemId(key).bindingAdapterPosition
         }
     }
+
+    @JvmField
     val itemDetailsLookup = object : ItemDetailsLookup<Long>() {
         override fun getItemDetails(event: MotionEvent): ItemDetails<Long>? {
             return recycler.findChildViewUnder(event.x, event.y)?.let {
@@ -182,6 +198,7 @@ abstract class TTAdapter<B : ViewBinding, T>(
     }
 
     companion object {
+        @JvmStatic
         fun <B : ViewBinding, T> setClickListener(
             listener: TTOnClickListener<B, T>, holder: TTHolder<B>, t: T?, vararg views: View,
         ) {
@@ -189,6 +206,7 @@ abstract class TTAdapter<B : ViewBinding, T>(
             for (v in views) v.setOnClickListener(l)
         }
 
+        @JvmStatic
         fun <B : ViewBinding, T> setLongClickListener(
             listener: TTOnLongClickListener<B, T>, holder: TTHolder<B>, t: T?, vararg views: View,
         ) {

@@ -62,25 +62,18 @@ fun setEmptyView(root: ViewGroup, emptyView: View, show: Boolean) {
         val view = root.getChildAt(0)
         if (view != emptyView) {
             root.addView(emptyView, 0)
-            if (!emptyView.isLaidOut)
-                if (root.isLaidOut) requestLayout(root,
-                    emptyView) else root.addOnLayoutChangeListener(object :
-                    View.OnLayoutChangeListener {
-                    override fun onLayoutChange(
-                        v: View,
-                        left: Int,
-                        top: Int,
-                        right: Int,
-                        bottom: Int,
-                        oldLeft: Int,
-                        oldTop: Int,
-                        oldRight: Int,
-                        oldBottom: Int,
-                    ) {
-                        v.removeOnLayoutChangeListener(this)
-                        requestLayout(v as ViewGroup, v.getChildAt(0))
-                    }
-                })
+            if (!emptyView.isLaidOut) if (root.isLaidOut) requestLayout(
+                root, emptyView
+            ) else root.addOnLayoutChangeListener(object :
+                View.OnLayoutChangeListener {
+                override fun onLayoutChange(
+                    v: View, left: Int, top: Int, right: Int, bottom: Int,
+                    oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int,
+                ) {
+                    v.removeOnLayoutChangeListener(this)
+                    requestLayout(v as ViewGroup, v.getChildAt(0))
+                }
+            })
         }
         for (i in 1 until root.childCount) root.getChildAt(i).visibility = View.GONE
     } else {
@@ -92,10 +85,15 @@ fun setEmptyView(root: ViewGroup, emptyView: View, show: Boolean) {
 }
 
 fun requestLayout(parent: ViewGroup, child: View) {
-    child.measure(View.MeasureSpec.makeMeasureSpec(
-        parent.measuredWidth - parent.paddingLeft - parent.paddingRight,
-        View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(
-        parent.measuredHeight - parent.paddingTop - parent.paddingBottom, View.MeasureSpec.EXACTLY))
+    child.measure(
+        View.MeasureSpec.makeMeasureSpec(
+            parent.measuredWidth - parent.paddingLeft - parent.paddingRight,
+            View.MeasureSpec.EXACTLY
+        ), View.MeasureSpec.makeMeasureSpec(
+            parent.measuredHeight - parent.paddingTop - parent.paddingBottom,
+            View.MeasureSpec.EXACTLY
+        )
+    )
     val childLeft = parent.paddingLeft
     val childTop = parent.paddingTop
     val childWidth = parent.measuredWidth - parent.paddingLeft - parent.paddingRight

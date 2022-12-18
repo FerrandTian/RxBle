@@ -16,5 +16,35 @@
 
 package tk.limt.rxble.model
 
-class Phy(val tx: Int, val rx: Int){
+import android.os.Parcel
+import android.os.Parcelable
+
+data class Phy(var tx: Int, var rx: Int) : Parcelable {
+    constructor() : this(0, 0) {
+    }
+
+    constructor(parcel: Parcel) : this(
+        parcel.readInt(),
+        parcel.readInt()
+    ) {
+    }
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeInt(tx)
+        parcel.writeInt(rx)
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<Phy> {
+        override fun createFromParcel(parcel: Parcel): Phy {
+            return Phy(parcel)
+        }
+
+        override fun newArray(size: Int): Array<Phy?> {
+            return arrayOfNulls(size)
+        }
+    }
 }
