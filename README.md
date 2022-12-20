@@ -29,11 +29,11 @@ Then you can add the dependency to your **app** build.gradle file:
 ```
 dependencies {
     ...
-    implementation 'com.github.FerrandTian:RxBle:1.0.3'
+    implementation 'com.github.FerrandTian:RxBle:1.0.4'
     
     // or
-    implementation 'com.github.FerrandTian.RxBle:rxble:1.0.3'
-    implementation 'com.github.FerrandTian.RxBle:ttbase:1.0.3'
+    implementation 'com.github.FerrandTian.RxBle:rxble:1.0.4'
+    implementation 'com.github.FerrandTian.RxBle:ttbase:1.0.4'
 }
 ```
 
