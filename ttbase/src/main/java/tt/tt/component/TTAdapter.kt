@@ -146,6 +146,13 @@ abstract class TTAdapter<B : ViewBinding, T>(
         }
     }
 
+    open fun addAll(ts: Collection<T>): Boolean {
+        val start = items.size
+        return items.addAll(ts).also {
+            if (it) notifyItemRangeInserted(start, ts.size)
+        }
+    }
+
     open fun update(t: T): T? {
         val i = items.indexOf(t)
         return if (i >= 0) items.set(i, t).also {
@@ -157,11 +164,17 @@ abstract class TTAdapter<B : ViewBinding, T>(
         return if (update(t) == null) add(t) else false
     }
 
-    open fun addAll(ts: Collection<T>): Boolean {
-        val start = items.size
-        return items.addAll(ts).also {
-            if (it) notifyItemRangeInserted(start, ts.size)
-        }
+    open fun remove(position: Int): T? {
+        return if (position >= 0 && position < items.size) items.removeAt(position).also {
+            notifyItemRemoved(position)
+        } else null
+    }
+
+    open fun remove(t: T): T? {
+        val i = items.indexOf(t)
+        return if (i >= 0) items.removeAt(i).also {
+            notifyItemRemoved(i)
+        } else null
     }
 
     open fun clear() {

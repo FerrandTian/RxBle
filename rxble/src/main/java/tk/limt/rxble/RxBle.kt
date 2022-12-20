@@ -127,6 +127,17 @@ class RxBle(
     }
 
     /**
+     * Disconnects an established connection, or cancels a connection attempt
+     * currently in progress.
+     *
+     * @return The new {@code Observable} that emits the new connection state.
+     */
+    fun disconnectWithState() = Single.just(1).flatMap {
+        disconnect()
+        connectionState().filter { it == BluetoothProfile.STATE_DISCONNECTED }.firstOrError()
+    }
+
+    /**
      * Connect to GATT Server hosted by this device. Caller acts as GATT client.
      * Or re-connect after the connection has been dropped. If the device is not
      * in range, the re-connection will be triggered once the device is back in range.
