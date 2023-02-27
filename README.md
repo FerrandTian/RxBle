@@ -64,7 +64,7 @@ RxBleManager.instance.scan(
 ### Create
 
 ```kotlin
-val ble: RxBle = RxBleManager.instance.obtain(address)
+val ble: RxBle = RxBleManager.instance.create(address)
 ```
 
 ### Connect and discover services
