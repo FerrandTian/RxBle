@@ -127,6 +127,15 @@ ble.setNotification(descriptor).subscribe(object : SingleObserver<BluetoothGattD
 ble.characteristic(uuid).subscribe { }
 ```
 
+### Disconnect or close connection
+
+```kotlin
+ble.disconnectWithState().subscribe { }     // Call connect() to reconnect
+ble.disconnect()     // Call connect() to reconnect
+
+ble.close()     // NOT receive any emits again
+```
+
 ## LICENSE
 
     Copyright (C) 2022 TianFeng
