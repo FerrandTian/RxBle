@@ -29,11 +29,11 @@ Then you can add the dependency to your **app** build.gradle file:
 ```
 dependencies {
     ...
-    implementation 'com.github.FerrandTian:RxBle:1.0.3'
+    implementation 'com.github.FerrandTian:RxBle:1.0.4'
     
     // or
-    implementation 'com.github.FerrandTian.RxBle:rxble:1.0.3'
-    implementation 'com.github.FerrandTian.RxBle:ttbase:1.0.3'
+    implementation 'com.github.FerrandTian.RxBle:rxble:1.0.4'
+    implementation 'com.github.FerrandTian.RxBle:ttbase:1.0.4'
 }
 ```
 
@@ -64,7 +64,7 @@ RxBleManager.instance.scan(
 ### Create
 
 ```kotlin
-val ble: RxBle = RxBleManager.instance.obtain(address)
+val ble: RxBle = RxBleManager.instance.create(address)
 ```
 
 ### Connect and discover services
@@ -125,6 +125,15 @@ ble.setNotification(descriptor).subscribe(object : SingleObserver<BluetoothGattD
 
 ```kotlin
 ble.characteristic(uuid).subscribe { }
+```
+
+### Disconnect or close connection
+
+```kotlin
+ble.disconnectWithState().subscribe { }     // Call connect() to reconnect
+ble.disconnect()     // Call connect() to reconnect
+
+ble.close()     // NOT receive any emits again
 ```
 
 ## LICENSE
