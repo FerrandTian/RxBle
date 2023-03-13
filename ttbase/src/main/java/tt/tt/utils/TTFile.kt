@@ -20,6 +20,7 @@ package tt.tt.utils
 
 import android.graphics.Bitmap
 import io.reactivex.rxjava3.core.ObservableOnSubscribe
+import java.lang.StringBuilder
 import java.io.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile

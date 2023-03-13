@@ -20,12 +20,15 @@ import android.bluetooth.*
 import android.content.Context
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.kotlin.toObservable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import tk.limt.rxble.model.RxGatt.*
+import tk.limt.utils.split
 import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Public API for the Bluetooth GATT Profile.
@@ -47,6 +50,17 @@ class RxBle(
     private var bleDisposable: Disposable? = null
     private val source = RxBleOnSubscribe(ctx, device, autoConnect)
     private val bleObservable = Observable.create(source).subscribeOn(Schedulers.io()).publish()
+    private val writeQueue = ConcurrentLinkedQueue<Pair<ByteArray, BluetoothGattCharacteristic>>()
+    private var writeEmitter: ObservableEmitter<Pair<ByteArray, BluetoothGattCharacteristic>>? =
+        null
+    private val writeObservable = Observable.create { writeEmitter = it }.flatMapSingle { pair ->
+        if (pair.first.size > mtu) write(pair.first.split(mtu), pair.second).andThen(
+            Single.just(pair)
+        ) else write(pair.second).doOnSubscribe {
+            pair.second.value = pair.first
+        }.map { pair }
+    }.subscribeOn(Schedulers.io()).publish()
+    private var writeDisposable: Disposable? = null
 
     /**
      * Get MTU size of current connection. Default MTU size is 20.
@@ -89,6 +103,7 @@ class RxBle(
      * this GATT client.
      */
     fun close() {
+        disableWrite()
         bleDisposable?.dispose()
         bleDisposable = null
     }
@@ -98,6 +113,7 @@ class RxBle(
      * currently in progress.
      */
     fun disconnect() {
+        disableWrite()
         source.realGatt?.disconnect()
     }
 
@@ -116,6 +132,25 @@ class RxBle(
     val isConnected: Boolean
         get() = connectionState == BluetoothProfile.STATE_CONNECTED
 
+    val isWriteEnabled: Boolean
+        get() = writeEmitter?.isDisposed == false
+                && writeDisposable?.isDisposed == false
+
+    val writeQueueSize: Int
+        get() = writeQueue.size
+
+    fun enableWrite() {
+        if (writeDisposable == null
+            || writeDisposable?.isDisposed == true
+        ) writeDisposable = writeObservable.connect()
+    }
+
+    fun disableWrite() {
+        writeQueue.clear()
+        writeDisposable?.dispose()
+        writeDisposable = null
+    }
+
     /**
      * Indicates when GATT client has connected/disconnected to/from a remote
      * GATT server.
@@ -123,6 +158,9 @@ class RxBle(
      * @return The new {@code Observable} that emits the new connection state.
      */
     fun connectionState() = bleObservable.ofType(ConnectionStateChange::class.java).map {
+        if (it.state != BluetoothProfile.STATE_CONNECTING
+            && it.state != BluetoothProfile.STATE_CONNECTED
+        ) disableWrite()
         it.state
     }
 
@@ -147,9 +185,7 @@ class RxBle(
     fun connect() = if (bleDisposable == null || bleDisposable?.isDisposed == true) {
         bleDisposable = bleObservable.connect()
         true
-    } else {
-        source.realGatt?.connect() == true
-    }
+    } else source.realGatt?.connect() == true
 
     /**
      * Connect to remote device.
@@ -178,7 +214,10 @@ class RxBle(
      */
     fun discoverServices() = Single.just(1).flatMap {
         check(source.gatt.discoverServices()) { "discoverServices failed" }
-        bleObservable.ofType(ServicesDiscovered::class.java).firstOrError().map { services }
+        bleObservable.ofType(ServicesDiscovered::class.java).firstOrError().map {
+            enableWrite()
+            services
+        }
     }
 
     /**
@@ -270,6 +309,35 @@ class RxBle(
         Completable.complete()
     })
 
+    fun writeInQueue(value: ByteArray, characteristic: BluetoothGattCharacteristic) {
+        val pair = Pair(value, characteristic)
+        synchronized(writeQueue) {
+            writeQueue.offer(pair)
+            if (writeQueueSize == 1) writeEmitter?.onNext(pair)
+        }
+    }
+
+    private fun writeNext() {
+        synchronized(writeQueue) {
+            writeQueue.poll()
+            writeQueue.peek()?.apply {
+                writeEmitter?.onNext(this)
+            }
+        }
+    }
+
+    fun write(
+        value: ByteArray,
+        characteristic: BluetoothGattCharacteristic
+    ) = writeObservable.doOnSubscribe {
+        writeInQueue(value, characteristic)
+    }.filter {
+        it.first.contentEquals(value)
+                && it.second.uuid == characteristic.uuid
+    }.firstOrError().doFinally {
+        writeNext()
+    }
+
     /**
      * Reads the value for a given descriptor from the associated remote device.
      *
@@ -359,5 +427,8 @@ class RxBle(
      *
      * @return The new {@code Observable} that emits the old service list.
      */
-    fun service() = bleObservable.ofType(ServiceChanged::class.java).map { services }
+    fun service() = bleObservable.ofType(ServiceChanged::class.java).map {
+        disableWrite()
+        services
+    }
 }

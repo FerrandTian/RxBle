@@ -21,8 +21,6 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 
 /**
- * 列表Item间隙
- *
  * @author tianfeng
  */
 class TTSpacingItemDecoration(

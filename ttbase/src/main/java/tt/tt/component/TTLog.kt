@@ -234,7 +234,7 @@ class TTLog(@JvmField var tag: String = "TTLog") {
      * @param msg the string to print to the target stream.
      */
     fun print(msg: Any?) {
-        if (debug) kotlin.io.print(msg)
+        if (debug) System.out.print(msg)
     }
 
     /**

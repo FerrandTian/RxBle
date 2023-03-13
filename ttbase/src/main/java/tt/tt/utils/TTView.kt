@@ -32,9 +32,6 @@ import android.widget.CompoundButton
 import android.widget.CompoundButton.OnCheckedChangeListener
 import android.widget.PopupWindow
 
-/**
- * @author tianfeng
- */
 fun requestFullscreen(activity: Activity) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         val window = activity.window

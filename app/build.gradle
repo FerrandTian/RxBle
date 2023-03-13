@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace 'tk.limt.demo'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId 'tk.limt.demo'
         minSdk 24
-        targetSdk 32
-        versionCode 104
-        versionName "1.0.4"
+        targetSdk 33
+        versionCode 105
+        versionName "1.0.5"
     }
 
     buildTypes {

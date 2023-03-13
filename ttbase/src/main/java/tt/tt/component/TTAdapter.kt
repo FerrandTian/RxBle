@@ -83,7 +83,9 @@ abstract class TTAdapter<B : ViewBinding, T>(
         }
 
         override fun getPosition(key: Long): Int {
-            return recycler.findViewHolderForItemId(key).bindingAdapterPosition
+            return recycler.findViewHolderForItemId(
+                key
+            )?.bindingAdapterPosition ?: RecyclerView.NO_POSITION
         }
     }
 
