@@ -19,16 +19,17 @@ package tk.limt.rxble
 import android.bluetooth.*
 import android.content.Context
 import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.core.Notification
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
-import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.kotlin.toObservable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import tk.limt.rxble.model.RxGatt.*
 import tk.limt.utils.split
 import java.util.*
-import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.TimeUnit
 
 /**
  * Public API for the Bluetooth GATT Profile.
@@ -50,15 +51,26 @@ class RxBle(
     private var bleDisposable: Disposable? = null
     private val source = RxBleOnSubscribe(ctx, device, autoConnect)
     private val bleObservable = Observable.create(source).subscribeOn(Schedulers.io()).publish()
-    private val writeQueue = ConcurrentLinkedQueue<Pair<ByteArray, BluetoothGattCharacteristic>>()
     private var writeEmitter: ObservableEmitter<Pair<ByteArray, BluetoothGattCharacteristic>>? =
         null
-    private val writeObservable = Observable.create { writeEmitter = it }.flatMapSingle { pair ->
-        if (pair.first.size > mtu) write(pair.first.split(mtu), pair.second).andThen(
-            Single.just(pair)
-        ) else write(pair.second).doOnSubscribe {
-            pair.second.value = pair.first
-        }.map { pair }
+    private val writeObservable = Observable.create {
+        writeEmitter = it
+    }.concatMapSingle<Triple<
+            ByteArray,
+            BluetoothGattCharacteristic,
+            Notification<Pair<ByteArray, BluetoothGattCharacteristic>>
+            >> { pair ->
+        (if (pair.first.size > mtu) pair.first.split(mtu).toObservable(
+        ) else Observable.just(pair.first)).concatMapCompletable { value ->
+            bleObservable.ofType(CharacteristicWrite::class.java).takeWhile {
+                it.characteristic.uuid != pair.second.uuid
+            }.ignoreElements().mergeWith(Completable.fromAction {
+                pair.second.value = value
+                check(source.gatt.writeCharacteristic(pair.second)) { "writeCharacteristic failed" }
+            }).timeout(200, TimeUnit.MILLISECONDS)
+        }.materialize<Pair<ByteArray, BluetoothGattCharacteristic>>().map {
+            Triple(pair.first, pair.second, it)
+        }
     }.subscribeOn(Schedulers.io()).publish()
     private var writeDisposable: Disposable? = null
 
@@ -136,9 +148,6 @@ class RxBle(
         get() = writeEmitter?.isDisposed == false
                 && writeDisposable?.isDisposed == false
 
-    val writeQueueSize: Int
-        get() = writeQueue.size
-
     fun enableWrite() {
         if (writeDisposable == null
             || writeDisposable?.isDisposed == true
@@ -146,7 +155,6 @@ class RxBle(
     }
 
     fun disableWrite() {
-        writeQueue.clear()
         writeDisposable?.dispose()
         writeDisposable = null
     }
@@ -170,10 +178,9 @@ class RxBle(
      *
      * @return The new {@code Observable} that emits the new connection state.
      */
-    fun disconnectWithState() = Single.just(1).flatMap {
+    fun disconnectWithState() = connectionState().mergeWith(Completable.fromAction {
         disconnect()
-        connectionState().filter { it == BluetoothProfile.STATE_DISCONNECTED }.firstOrError()
-    }
+    })
 
     /**
      * Connect to GATT Server hosted by this device. Caller acts as GATT client.
@@ -192,19 +199,18 @@ class RxBle(
      *
      * @return The new {@code Observable} that emits the new connection state.
      */
-    fun connectWithState() = Single.just(1).flatMapObservable {
+    fun connectWithState() = connectionState().mergeWith(Completable.fromAction {
         check(connect()) { "connect failed" }
-        connectionState()
-    }
+    })
 
     /**
      * Connect and discover services to remote device.
      *
      * @return The new {@code Single} that emits the discovered services.
      */
-    fun connectWithServices() = connectWithState().filter {
-        it == BluetoothProfile.STATE_CONNECTED
-    }.firstOrError().flatMap { discoverServices() }
+    fun connectWithServices() = connectWithState().takeWhile {
+        it != BluetoothProfile.STATE_CONNECTED
+    }.ignoreElements().andThen(discoverServices())
 
     /**
      * Discovers services offered by a remote device as well as their
@@ -212,12 +218,13 @@ class RxBle(
      *
      * @return The new {@code Single} that emits the discovered services.
      */
-    fun discoverServices() = Single.just(1).flatMap {
+    fun discoverServices() = bleObservable.ofType(
+        ServicesDiscovered::class.java
+    ).mergeWith(Completable.fromAction {
         check(source.gatt.discoverServices()) { "discoverServices failed" }
-        bleObservable.ofType(ServicesDiscovered::class.java).firstOrError().map {
-            enableWrite()
-            services
-        }
+    }).firstOrError().map {
+        enableWrite()
+        services
     }
 
     /**
@@ -228,7 +235,11 @@ class RxBle(
      */
     fun characteristic(uuid: UUID) = bleObservable.ofType(
         CharacteristicChanged::class.java
-    ).filter { it.characteristic.uuid == uuid }.map { it.characteristic }
+    ).mapOptional {
+        if (it.characteristic.uuid == uuid) Optional.of(
+            it.characteristic
+        ) else Optional.empty()
+    }
 
     /**
      * Reads the requested characteristic from the associated remote device.
@@ -236,12 +247,13 @@ class RxBle(
      * @param characteristic Characteristic to read from the remote device
      * @return The new {@code Single} emits the characteristic that was read successfully.
      */
-    fun read(characteristic: BluetoothGattCharacteristic) = Single.just(1).flatMap {
+    fun read(characteristic: BluetoothGattCharacteristic) = bleObservable.ofType(
+        CharacteristicRead::class.java
+    ).filter {
+        it.characteristic.uuid == characteristic.uuid
+    }.mergeWith(Completable.fromAction {
         check(source.gatt.readCharacteristic(characteristic)) { "readCharacteristic failed" }
-        bleObservable.ofType(CharacteristicRead::class.java).filter {
-            it.characteristic.uuid == characteristic.uuid
-        }.firstOrError().map { it.characteristic }
-    }
+    }).firstOrError().map { it.characteristic }
 
     /**
      * Writes a given characteristic and its values to the associated remote device.
@@ -249,12 +261,13 @@ class RxBle(
      * @param characteristic Characteristic to write on the remote device
      * @return The new {@code Single} emits the characteristic that was successfully written.
      */
-    fun write(characteristic: BluetoothGattCharacteristic) = Single.just(1).flatMap {
+    fun write(characteristic: BluetoothGattCharacteristic) = bleObservable.ofType(
+        CharacteristicWrite::class.java
+    ).filter {
+        it.characteristic.uuid == characteristic.uuid
+    }.mergeWith(Completable.fromAction {
         check(source.gatt.writeCharacteristic(characteristic)) { "writeCharacteristic failed" }
-        bleObservable.ofType(CharacteristicWrite::class.java).filter {
-            it.characteristic.uuid == characteristic.uuid
-        }.firstOrError().map { it.characteristic }
-    }
+    }).firstOrError().map { it.characteristic }
 
     /**
      * Writes a bunch of values into the given characteristic to the associated remote device.
@@ -271,10 +284,7 @@ class RxBle(
         characteristic: BluetoothGattCharacteristic
     ) = values.toObservable().concatMapCompletable { value ->
         characteristic.value = value
-        write(characteristic).flatMapCompletable {
-            check(value.contentEquals(it.value)) { "writeCharacteristic failed" }
-            Completable.complete()
-        }
+        write(characteristic).ignoreElement()
     }
 
     /**
@@ -290,53 +300,31 @@ class RxBle(
     fun reliableWrite(
         values: Iterable<ByteArray>,
         characteristic: BluetoothGattCharacteristic
-    ) = Single.just(1).flatMapCompletable {
+    ) = values.toObservable().startWith(Completable.fromAction {
         check(source.gatt.beginReliableWrite()) { "beginReliableWrite failed" }
-        values.toObservable().concatMapCompletable { value ->
-            characteristic.value = value
-            write(characteristic).flatMapCompletable {
-                check(value.contentEquals(it.value)) {
-                    source.gatt.abortReliableWrite()
-                    "writeCharacteristic failed"
-                }
-                Completable.complete()
-            }
-        }
-    }.andThen(Single.just(1).flatMap {
-        check(source.gatt.executeReliableWrite()) { "executeReliableWrite failed" }
-        bleObservable.ofType(ReliableWriteCompleted::class.java).firstOrError()
-    }.flatMapCompletable {
-        Completable.complete()
-    })
+    }).concatMapCompletable { value ->
+        characteristic.value = value
+        write(characteristic).ignoreElement()
+    }.andThen(
+        bleObservable.ofType(ReliableWriteCompleted::class.java).firstOrError().ignoreElement(
+        ).mergeWith(Completable.fromAction {
+            check(source.gatt.executeReliableWrite()) { "executeReliableWrite failed" }
+        })
+    ).doOnError { source.gatt.abortReliableWrite() }
 
     fun writeInQueue(value: ByteArray, characteristic: BluetoothGattCharacteristic) {
-        val pair = Pair(value, characteristic)
-        synchronized(writeQueue) {
-            writeQueue.offer(pair)
-            if (writeQueueSize == 1) writeEmitter?.onNext(pair)
-        }
-    }
-
-    private fun writeNext() {
-        synchronized(writeQueue) {
-            writeQueue.poll()
-            writeQueue.peek()?.apply {
-                writeEmitter?.onNext(this)
-            }
-        }
+        requireNotNull(writeEmitter) { "writeCharacteristic failed" }
+        writeEmitter!!.onNext(Pair(value, characteristic))
     }
 
     fun write(
         value: ByteArray,
         characteristic: BluetoothGattCharacteristic
-    ) = writeObservable.doOnSubscribe {
+    ) = writeObservable.filter {
+        it.second.uuid == characteristic.uuid
+    }.mergeWith(Completable.fromAction {
         writeInQueue(value, characteristic)
-    }.filter {
-        it.first.contentEquals(value)
-                && it.second.uuid == characteristic.uuid
-    }.firstOrError().doFinally {
-        writeNext()
-    }
+    }).firstOrError().map { it.third }.dematerialize { it }.ignoreElement()
 
     /**
      * Reads the value for a given descriptor from the associated remote device.
@@ -344,12 +332,13 @@ class RxBle(
      * @param descriptor Descriptor value to read from the remote device
      * @return The new {@code Single} emits the descriptor that was read successfully.
      */
-    fun read(descriptor: BluetoothGattDescriptor) = Single.just(1).flatMap {
+    fun read(descriptor: BluetoothGattDescriptor) = bleObservable.ofType(
+        DescriptorRead::class.java
+    ).filter {
+        it.descriptor.uuid == descriptor.uuid
+    }.mergeWith(Completable.fromAction {
         check(source.gatt.readDescriptor(descriptor)) { "readDescriptor failed" }
-        bleObservable.ofType(DescriptorRead::class.java).filter {
-            it.descriptor.uuid == descriptor.uuid
-        }.firstOrError().map { it.descriptor }
-    }
+    }).firstOrError().map { it.descriptor }
 
     /**
      * Write the value of a given descriptor to the associated remote device.
@@ -357,12 +346,13 @@ class RxBle(
      * @param descriptor Descriptor to write to the associated remote device
      * @return The new {@code Single} emits the descriptor that was successfully written.
      */
-    fun write(descriptor: BluetoothGattDescriptor) = Single.just(1).flatMap {
+    fun write(descriptor: BluetoothGattDescriptor) = bleObservable.ofType(
+        DescriptorWrite::class.java
+    ).filter {
+        it.descriptor.uuid == descriptor.uuid
+    }.mergeWith(Completable.fromAction {
         check(source.gatt.writeDescriptor(descriptor)) { "writeDescriptor failed" }
-        bleObservable.ofType(DescriptorWrite::class.java).filter {
-            it.descriptor.uuid == descriptor.uuid
-        }.firstOrError().map { it.descriptor }
-    }
+    }).firstOrError().map { it.descriptor }
 
     /**
      * Enable or disable notifications/indications for a given characteristic.
@@ -373,25 +363,27 @@ class RxBle(
      * {@link BluetoothGattDescriptor#DISABLE_NOTIFICATION_VALUE}
      * @return The new {@code Single} emits the descriptor that was successfully written.
      */
-    fun setNotification(descriptor: BluetoothGattDescriptor) = Single.just(descriptor).flatMap {
+    fun setNotification(descriptor: BluetoothGattDescriptor) = write(
+        descriptor
+    ).toObservable().mergeWith(Completable.fromAction {
         check(
             source.gatt.setCharacteristicNotification(
                 descriptor.characteristic,
                 !BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE.contentEquals(descriptor.value)
             )
         ) { "setCharacteristicNotification failed" }
-        write(descriptor)
-    }
+    }).firstOrError()
 
     /**
      * Read the RSSI for a connected remote device.
      *
      * @return The new {@code Single} that emits the RSSI value.
      */
-    fun readRemoteRssi() = Single.just(1).flatMap {
-        check(source.gatt.readRemoteRssi()) { "readRemoteRssi failed" }
-        bleObservable.ofType(ReadRemoteRssi::class.java).firstOrError().map { it.rssi }
-    }
+    fun readRemoteRssi() = bleObservable.ofType(ReadRemoteRssi::class.java).mergeWith(
+        Completable.fromAction {
+            check(source.gatt.readRemoteRssi()) { "readRemoteRssi failed" }
+        }
+    ).firstOrError().map { it.rssi }
 
     /**
      * Indicates the MTU for a given device connection has changed.
@@ -413,10 +405,9 @@ class RxBle(
      * @return The new {@code Single} that emits the new MTU size whether
      * this operation was successful.
      */
-    fun requestMtu(mtu: Int) = Single.just(1).flatMap {
+    fun requestMtu(mtu: Int) = mtu().mergeWith(Completable.fromAction {
         check(source.gatt.requestMtu(mtu)) { "requestMtu failed" }
-        mtu().firstOrError()
-    }
+    }).firstOrError()
 
     /**
      * Indicates service changed event is received.
