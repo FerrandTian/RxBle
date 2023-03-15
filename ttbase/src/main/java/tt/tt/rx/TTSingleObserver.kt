@@ -22,7 +22,7 @@ import io.reactivex.rxjava3.disposables.Disposable
 /**
  * @author tianfeng
  */
-abstract class TTSingleObserver<T>(private val set: TTDisposables? = null) : SingleObserver<T> {
+abstract class TTSingleObserver<T : Any>(private val set: TTDisposables? = null) : SingleObserver<T> {
     @JvmField
     var disposable: Disposable? = null
 

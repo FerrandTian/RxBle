@@ -365,7 +365,7 @@ class RxBle(
      */
     fun setNotification(descriptor: BluetoothGattDescriptor) = write(
         descriptor
-    ).toObservable().mergeWith(Completable.fromAction {
+    ).startWith(Completable.fromAction {
         check(
             source.gatt.setCharacteristicNotification(
                 descriptor.characteristic,
