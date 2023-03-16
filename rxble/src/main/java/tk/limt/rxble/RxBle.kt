@@ -29,7 +29,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import tk.limt.rxble.model.RxGatt.*
 import tk.limt.utils.split
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 /**
  * Public API for the Bluetooth GATT Profile.
