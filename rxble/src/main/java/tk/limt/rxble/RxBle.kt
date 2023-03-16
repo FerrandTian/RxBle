@@ -67,7 +67,7 @@ class RxBle(
             }.ignoreElements().mergeWith(Completable.fromAction {
                 pair.second.value = value
                 check(source.gatt.writeCharacteristic(pair.second)) { "writeCharacteristic failed" }
-            }).timeout(200, TimeUnit.MILLISECONDS)
+            })
         }.materialize<Pair<ByteArray, BluetoothGattCharacteristic>>().map {
             Triple(pair.first, pair.second, it)
         }
