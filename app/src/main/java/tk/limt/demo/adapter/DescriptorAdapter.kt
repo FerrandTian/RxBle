@@ -35,30 +35,30 @@ import tt.tt.utils.visible
 
 class DescriptorAdapter(
     val address: String,
-    items: MutableList<BluetoothGattDescriptor>
+    items: MutableList<BluetoothGattDescriptor>,
 ) : TTAdapter<ItemDescriptorBinding, BluetoothGattDescriptor>(items) {
     private val manager = DeviceManager.instance
     private val clickListener = object :
         TTOnClickListener<ItemDescriptorBinding, BluetoothGattDescriptor> {
         override fun onClick(
-            v: View, h: TTHolder<ItemDescriptorBinding>, t: BluetoothGattDescriptor?
+            v: View, h: TTHolder<ItemDescriptorBinding>, t: BluetoothGattDescriptor?,
         ) {
             t?.let {
-                manager.obtain(address).read(it).observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                        object : TTSingleObserver<BluetoothGattDescriptor>(h.disposables) {
-                            override fun onSuccess(t: BluetoothGattDescriptor) {
-                                super.onSuccess(t)
-                                h.vb.tvValue.text = t.value.hex(true)
-                                visible(h.vb.tvValueTitle, h.vb.tvValue)
-                            }
+                manager.obtain(address).read(it).observeOn(
+                    AndroidSchedulers.mainThread()
+                ).subscribe(object : TTSingleObserver<ByteArray>(h.disposables) {
+                    override fun onSuccess(t: ByteArray) {
+                        super.onSuccess(t)
+                        h.vb.tvValue.text = t.hex(true)
+                        visible(h.vb.tvValueTitle, h.vb.tvValue)
+                    }
 
-                            override fun onError(e: Throwable) {
-                                super.onError(e)
-                                e.message?.let { it -> ctx.toast(it) }
-                            }
-                        }
-                    )
+                    override fun onError(e: Throwable) {
+                        super.onError(e)
+                        e.message?.let { it -> ctx.toast(it) }
+                    }
+                }
+                )
             }
         }
     }

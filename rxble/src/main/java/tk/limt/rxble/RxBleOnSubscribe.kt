@@ -22,6 +22,7 @@ import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import tk.limt.rxble.model.Phy
 import tk.limt.rxble.model.RxGatt
+import java.lang.Exception
 
 internal class RxBleOnSubscribe(
     private val ctx: Context,
@@ -44,11 +45,11 @@ internal class RxBleOnSubscribe(
         connectionState = BluetoothProfile.STATE_CONNECTING
         realGatt = device.connectGatt(ctx, autoConnect, object : BluetoothGattCallback() {
             override fun onPhyUpdate(gatt: BluetoothGatt, txPhy: Int, rxPhy: Int, status: Int) {
-                emitter.onNext(RxGatt.PhyUpdate(gatt, Phy(txPhy, rxPhy), status))
+                emitter.onNext(RxGatt.PhyUpdate(gatt, status, Phy(txPhy, rxPhy)))
             }
 
             override fun onPhyRead(gatt: BluetoothGatt, txPhy: Int, rxPhy: Int, status: Int) {
-                emitter.onNext(RxGatt.PhyRead(gatt, Phy(txPhy, rxPhy), status))
+                emitter.onNext(RxGatt.PhyRead(gatt, status, Phy(txPhy, rxPhy)))
             }
 
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
@@ -65,7 +66,16 @@ internal class RxBleOnSubscribe(
                 characteristic: BluetoothGattCharacteristic,
                 status: Int,
             ) {
-                emitter.onNext(RxGatt.CharacteristicRead(gatt, characteristic, status))
+                emitter.onNext(RxGatt.CharacteristicRead(gatt, status, characteristic))
+            }
+
+            override fun onCharacteristicRead(
+                gatt: BluetoothGatt,
+                characteristic: BluetoothGattCharacteristic,
+                value: ByteArray,
+                status: Int,
+            ) {
+                emitter.onNext(RxGatt.CharacteristicRead(gatt, status, characteristic, value))
             }
 
             override fun onCharacteristicWrite(
@@ -73,7 +83,7 @@ internal class RxBleOnSubscribe(
                 characteristic: BluetoothGattCharacteristic,
                 status: Int,
             ) {
-                emitter.onNext(RxGatt.CharacteristicWrite(gatt, characteristic, status))
+                emitter.onNext(RxGatt.CharacteristicWrite(gatt, status, characteristic))
             }
 
             override fun onCharacteristicChanged(
@@ -83,12 +93,29 @@ internal class RxBleOnSubscribe(
                 emitter.onNext(RxGatt.CharacteristicChanged(gatt, characteristic))
             }
 
+            override fun onCharacteristicChanged(
+                gatt: BluetoothGatt,
+                characteristic: BluetoothGattCharacteristic,
+                value: ByteArray,
+            ) {
+                emitter.onNext(RxGatt.CharacteristicChanged(gatt, characteristic, value))
+            }
+
             override fun onDescriptorRead(
                 gatt: BluetoothGatt,
                 descriptor: BluetoothGattDescriptor,
                 status: Int,
             ) {
-                emitter.onNext(RxGatt.DescriptorRead(gatt, descriptor, status))
+                emitter.onNext(RxGatt.DescriptorRead(gatt, status, descriptor))
+            }
+
+            override fun onDescriptorRead(
+                gatt: BluetoothGatt,
+                descriptor: BluetoothGattDescriptor,
+                status: Int,
+                value: ByteArray,
+            ) {
+                emitter.onNext(RxGatt.DescriptorRead(gatt, status, descriptor, value))
             }
 
             override fun onDescriptorWrite(
@@ -96,7 +123,7 @@ internal class RxBleOnSubscribe(
                 descriptor: BluetoothGattDescriptor,
                 status: Int,
             ) {
-                emitter.onNext(RxGatt.DescriptorWrite(gatt, descriptor, status))
+                emitter.onNext(RxGatt.DescriptorWrite(gatt, status, descriptor))
             }
 
             override fun onReliableWriteCompleted(gatt: BluetoothGatt, status: Int) {
@@ -104,12 +131,12 @@ internal class RxBleOnSubscribe(
             }
 
             override fun onReadRemoteRssi(gatt: BluetoothGatt, rssi: Int, status: Int) {
-                emitter.onNext(RxGatt.ReadRemoteRssi(gatt, rssi, status))
+                emitter.onNext(RxGatt.ReadRemoteRssi(gatt, status, rssi))
             }
 
             override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
                 this@RxBleOnSubscribe.mtu = mtu - 3
-                emitter.onNext(RxGatt.MtuChanged(gatt, mtu, status))
+                emitter.onNext(RxGatt.MtuChanged(gatt, status, mtu))
             }
 
             override fun onServiceChanged(gatt: BluetoothGatt) {
@@ -118,7 +145,11 @@ internal class RxBleOnSubscribe(
         }, BluetoothDevice.TRANSPORT_LE)
         emitter.setCancellable {
             connectionState = BluetoothProfile.STATE_DISCONNECTED
-            realGatt?.close()
+            try {
+                realGatt?.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             realGatt = null
         }
     }

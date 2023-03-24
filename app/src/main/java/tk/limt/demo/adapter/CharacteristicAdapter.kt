@@ -41,23 +41,22 @@ import tt.tt.utils.visible
 
 class CharacteristicAdapter(
     val address: String,
-    items: MutableList<BluetoothGattCharacteristic>
+    items: MutableList<BluetoothGattCharacteristic>,
 ) : TTAdapter<ItemCharacteristicBinding, BluetoothGattCharacteristic>(items) {
     private val manager = DeviceManager.instance
     private val clickListener = object :
         TTOnClickListener<ItemCharacteristicBinding, BluetoothGattCharacteristic> {
         override fun onClick(
-            v: View, h: TTHolder<ItemCharacteristicBinding>, ch: BluetoothGattCharacteristic?
+            v: View, h: TTHolder<ItemCharacteristicBinding>, ch: BluetoothGattCharacteristic?,
         ) {
             when (v) {
                 h.vb.ivRead -> ch?.let {
                     manager.obtain(address).read(it).observeOn(
                         AndroidSchedulers.mainThread()
-                    ).subscribe(object :
-                        TTSingleObserver<BluetoothGattCharacteristic>(h.disposables) {
-                        override fun onSuccess(t: BluetoothGattCharacteristic) {
+                    ).subscribe(object : TTSingleObserver<ByteArray>(h.disposables) {
+                        override fun onSuccess(t: ByteArray) {
                             super.onSuccess(t)
-                            h.vb.tvValue.text = t.value.hex(true)
+                            h.vb.tvValue.text = t.hex(true)
                             visible(h.vb.tvValueTitle, h.vb.tvValue)
                         }
 
@@ -70,19 +69,15 @@ class CharacteristicAdapter(
                 h.vb.ivWrite -> ch?.let { showSendDialog(h, it) }
                 h.vb.ivNotify -> {
                     ch?.let {
-                        manager.obtain(address).setNotification(ch.descriptors[0]).observeOn(
+                        manager.obtain(address).setNotification(
+                            ch.descriptors[0], if (
+                                ch.isNotificationEnabled
+                            ) BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE else BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                        ).observeOn(
                             AndroidSchedulers.mainThread()
-                        ).subscribe(object :
-                            TTSingleObserver<BluetoothGattDescriptor>(h.disposables) {
-                            override fun onSubscribe(d: Disposable) {
-                                super.onSubscribe(d)
-                                ch.descriptors[0].value = if (
-                                    ch.isNotificationEnabled
-                                ) BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE else BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                            }
-
-                            override fun onSuccess(t: BluetoothGattDescriptor) {
-                                super.onSuccess(t)
+                        ).subscribe(object : TTCompletableObserver(h.disposables) {
+                            override fun onComplete() {
+                                super.onComplete()
                                 h.vb.ivNotify.setImageResource(
                                     if (ch.isNotificationEnabled) {
                                         R.drawable.ic_download_multiple_disable_24
@@ -132,9 +127,9 @@ class CharacteristicAdapter(
             }
             manager.obtain(address).characteristic(item.uuid).observeOn(
                 AndroidSchedulers.mainThread()
-            ).subscribe(object : TTObserver<BluetoothGattCharacteristic>(holder.disposables) {
-                override fun onNext(t: BluetoothGattCharacteristic) {
-                    vb.tvValue.text = t.value.hex(true)
+            ).subscribe(object : TTObserver<ByteArray>(holder.disposables) {
+                override fun onNext(t: ByteArray) {
+                    vb.tvValue.text = t.hex(true)
                     visible(vb.tvValueTitle, vb.tvValue)
                 }
             })
@@ -147,47 +142,29 @@ class CharacteristicAdapter(
 
     fun showSendDialog(
         holder: TTHolder<ItemCharacteristicBinding>,
-        characteristic: BluetoothGattCharacteristic
+        characteristic: BluetoothGattCharacteristic,
     ) {
         AlertDialog.Builder(ctx).setTitle(R.string.write_value).setView(
             R.layout.dialog_send
         ).setPositiveButton(tt.tt.R.string.tt_send) { dialog, which ->
             val text = (dialog as AlertDialog).findViewById<EditText>(R.id.et_value)?.text?.trim()
             text?.hexToBytes()?.let {
-                if (it.size > manager.obtain(address).mtu) {
-                    manager.obtain(address).reliableWrite(
-                        it.split(manager.obtain(address).mtu).asIterable(),
-                        characteristic
-                    ).observeOn(
-                        AndroidSchedulers.mainThread()
-                    ).subscribe(object : TTCompletableObserver(holder.disposables) {
-                        override fun onError(e: Throwable) {
-                            super.onError(e)
-                            e.message?.let { it -> ctx.toast(it) }
-                        }
-                    })
-                } else {
-                    manager.obtain(address).write(characteristic).observeOn(
-                        AndroidSchedulers.mainThread()
-                    ).subscribe(object :
-                        TTSingleObserver<BluetoothGattCharacteristic>(holder.disposables) {
-                        override fun onSubscribe(d: Disposable) {
-                            super.onSubscribe(d)
-                            characteristic.value = it
-                        }
+                ((if (it.size > manager.obtain(address).mtu) manager.obtain(address).writeWithQueue(
+                    characteristic, it
+                ) else manager.obtain(address).write(characteristic, it))).observeOn(
+                    AndroidSchedulers.mainThread()
+                ).subscribe(object : TTCompletableObserver(holder.disposables) {
+                    override fun onComplete() {
+                        super.onComplete()
+                        holder.vb.tvValue.text = it.hex(true)
+                        visible(holder.vb.tvValueTitle, holder.vb.tvValue)
+                    }
 
-                        override fun onSuccess(t: BluetoothGattCharacteristic) {
-                            super.onSuccess(t)
-                            holder.vb.tvValue.text = t.value.hex(true)
-                            visible(holder.vb.tvValueTitle, holder.vb.tvValue)
-                        }
-
-                        override fun onError(e: Throwable) {
-                            super.onError(e)
-                            e.message?.let { it -> ctx.toast(it) }
-                        }
-                    })
-                }
+                    override fun onError(e: Throwable) {
+                        super.onError(e)
+                        e.message?.let { it -> ctx.toast(it) }
+                    }
+                })
             }
         }.setNegativeButton(tt.tt.R.string.tt_cancel, null).show()
     }

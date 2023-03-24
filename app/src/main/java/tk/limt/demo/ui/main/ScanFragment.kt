@@ -123,6 +123,9 @@ class ScanFragment : TTFragment<RefreshRecyclerBinding>(), SwipeRefreshLayout.On
             if (!ctx.permissionGranted(Manifest.permission.BLUETOOTH_SCAN)) {
                 permissions.add(Manifest.permission.BLUETOOTH_SCAN)
             }
+            if (!ctx.permissionGranted(Manifest.permission.BLUETOOTH_CONNECT)) {
+                permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+            }
         }
         if (!ctx.permissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
             permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)

@@ -24,7 +24,7 @@ import android.bluetooth.BluetoothProfile
 internal open class RxGatt(
     val gatt: BluetoothGatt,
     val status: Int = BluetoothGatt.GATT_SUCCESS,
-    val state: Int = BluetoothProfile.STATE_CONNECTED
+    val state: Int = BluetoothProfile.STATE_CONNECTED,
 ) {
 
     val isSuccess: Boolean
@@ -34,51 +34,55 @@ internal open class RxGatt(
     val isDisconnected: Boolean
         get() = state == BluetoothProfile.STATE_DISCONNECTED
 
-    class PhyUpdate(gatt: BluetoothGatt, val phy: Phy, status: Int) :
-        RxGatt(gatt, status)
+    class PhyUpdate(gatt: BluetoothGatt, status: Int, val phy: Phy) : RxGatt(gatt, status)
 
-    class PhyRead(gatt: BluetoothGatt, val phy: Phy, status: Int) :
-        RxGatt(gatt, status)
+    class PhyRead(gatt: BluetoothGatt, status: Int, val phy: Phy) : RxGatt(gatt, status)
 
-    class ConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) :
-        RxGatt(gatt, status, newState)
+    class ConnectionStateChange(
+        gatt: BluetoothGatt,
+        status: Int,
+        newState: Int,
+    ) : RxGatt(gatt, status, newState)
 
     class ServicesDiscovered(gatt: BluetoothGatt, status: Int) : RxGatt(gatt, status)
 
     class CharacteristicRead(
         gatt: BluetoothGatt,
+        status: Int,
         val characteristic: BluetoothGattCharacteristic,
-        status: Int
+        val value: ByteArray = characteristic.value,
     ) : RxGatt(gatt, status)
 
     class CharacteristicWrite(
         gatt: BluetoothGatt,
+        status: Int,
         val characteristic: BluetoothGattCharacteristic,
-        status: Int
     ) : RxGatt(gatt, status)
 
     class CharacteristicChanged(
         gatt: BluetoothGatt,
-        val characteristic: BluetoothGattCharacteristic
+        val characteristic: BluetoothGattCharacteristic,
+        val value: ByteArray = characteristic.value,
     ) : RxGatt(gatt)
 
     class DescriptorRead(
         gatt: BluetoothGatt,
+        status: Int,
         val descriptor: BluetoothGattDescriptor,
-        status: Int
+        val value: ByteArray = descriptor.value,
     ) : RxGatt(gatt, status)
 
     class DescriptorWrite(
         gatt: BluetoothGatt,
+        status: Int,
         val descriptor: BluetoothGattDescriptor,
-        status: Int
     ) : RxGatt(gatt, status)
 
     class ReliableWriteCompleted(gatt: BluetoothGatt, status: Int) : RxGatt(gatt, status)
 
-    class ReadRemoteRssi(gatt: BluetoothGatt, val rssi: Int, status: Int) : RxGatt(gatt, status)
+    class ReadRemoteRssi(gatt: BluetoothGatt, status: Int, val rssi: Int) : RxGatt(gatt, status)
 
-    class MtuChanged(gatt: BluetoothGatt, val mtu: Int, status: Int) : RxGatt(gatt, status)
+    class MtuChanged(gatt: BluetoothGatt, status: Int, val mtu: Int) : RxGatt(gatt, status)
 
     class ServiceChanged(gatt: BluetoothGatt) : RxGatt(gatt)
 }
