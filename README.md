@@ -29,13 +29,13 @@ Then you can add the dependency to your **app** build.gradle file:
 ```
 dependencies {
     ...
-    implementation 'com.github.FerrandTian:RxBle:1.0.5'
+    implementation 'com.github.FerrandTian:RxBle:1.0.6'
     
     // Or
-    implementation 'com.github.FerrandTian.RxBle:rxble:1.0.5'
+    implementation 'com.github.FerrandTian.RxBle:rxble:1.0.6'
     
     // Optional
-    implementation 'com.github.FerrandTian.RxBle:ttbase:1.0.5'
+    implementation 'com.github.FerrandTian.RxBle:ttbase:1.0.6'
 }
 ```
 
@@ -91,36 +91,37 @@ ble.connectionState().subscribe { }
 
 ### Read and write Characteristic or Descriptor
 
+This fun is thread safe. Use this method to execute write operation one after another.
+
 ```kotlin
-ble.read(characteristic).subscribe { }
-ble.write(characteristic).subscribe { }
-ble.read(descriptor).subscribe { }
-ble.write(descriptor).subscribe { }
+fun writeWithQueue(
+    characteristic: BluetoothGattCharacteristic,
+    value: ByteArray,
+    writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
+)
+fun writeWithQueue(
+    descriptor: BluetoothGattDescriptor,
+    value: ByteArray,
+)
 ```
 
-Split ByteArray before `write` when length exceeds mtu.
+NOT thread safe.
 
 ```kotlin
-fun write(
-    values: Iterable<ByteArray>, 
-    characteristic: BluetoothGattCharacteristic
-) { }
-fun reliableWrite(
-    values: Iterable<ByteArray>,
-    characteristic: BluetoothGattCharacteristic
-) { }
+ble.read(characteristic).subscribe { }
+ble.write(characteristic, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT).subscribe { }
+ble.reliableWrite(iterator).subscribe { }
+
+ble.read(descriptor).subscribe { }
+ble.write(descriptor, bytes).subscribe { }
 ```
 
 ### Enable or disable notification
 
 ```kotlin
-ble.setNotification(descriptor).subscribe(object : SingleObserver<BluetoothGattDescriptor> {
-    override fun onSubscribe(d: Disposable) {
-        descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE // or disable value
-    }
-    override fun onSuccess(t: BluetoothGattDescriptor) {}
-    override fun onError(e: Throwable) {}
-})
+ble.setNotification(
+    descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+).subscribe { }
 ```
 
 ### Observe Characteristic on change

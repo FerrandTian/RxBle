@@ -160,7 +160,7 @@ class RxBle(
      * Indicates when GATT client has connected/disconnected to/from a remote
      * GATT server.
      *
-     * @return The new {@code Observable} that emits the new connection state.
+     * @return The new Observable that emits the new connection state.
      */
     fun connectionState() = bleObservable.ofType(ConnectionStateChange::class.java).map {
         if (it.state != BluetoothProfile.STATE_CONNECTING
@@ -173,7 +173,7 @@ class RxBle(
      * Disconnects an established connection, or cancels a connection attempt
      * currently in progress.
      *
-     * @return The new {@code Observable} that emits the new connection state.
+     * @return The new Observable that emits the new connection state.
      */
     fun disconnectWithState() = connectionState().takeUntil {
         it == BluetoothProfile.STATE_DISCONNECTED
@@ -198,7 +198,7 @@ class RxBle(
     /**
      * Connect to remote device.
      *
-     * @return The new {@code Observable} that emits the new connection state.
+     * @return The new Observable that emits the new connection state.
      */
     fun connectWithState() = connectionState().mergeWith(Completable.fromAction {
         check(connect()) { "connect failed" }
@@ -207,17 +207,17 @@ class RxBle(
     /**
      * Connect and discover services to remote device.
      *
-     * @return The new {@code Single} that emits the discovered services.
+     * @return The new Single that emits the discovered services.
      */
-    fun connectWithServices() = connectWithState().takeWhile {
-        it != BluetoothProfile.STATE_CONNECTED
+    fun connectWithServices() = connectWithState().takeUntil {
+        it == BluetoothProfile.STATE_CONNECTED
     }.ignoreElements().andThen(discoverServices())
 
     /**
      * Discovers services offered by a remote device as well as their
      * characteristics and descriptors.
      *
-     * @return The new {@code Single} that emits the discovered services.
+     * @return The new Single that emits the discovered services.
      */
     fun discoverServices() = bleObservable.ofType(
         ServicesDiscovered::class.java
@@ -232,7 +232,7 @@ class RxBle(
      * Indicates that the given characteristic has changed.
      *
      * @param uuid UUID of which Characteristic to subscribe
-     * @return The new {@code Observable} that emits the Characteristic.
+     * @return The new Observable that emits the Characteristic`s value.
      */
     fun characteristic(uuid: UUID) = bleObservable.ofType(
         CharacteristicChanged::class.java
@@ -246,7 +246,7 @@ class RxBle(
      * Reads the requested characteristic from the associated remote device.
      *
      * @param characteristic Characteristic to read from the remote device
-     * @return The new {@code Single} emits the characteristic that was read successfully.
+     * @return The new Single emits the value that was read successfully.
      */
     fun read(characteristic: BluetoothGattCharacteristic) = bleObservable.ofType(
         CharacteristicRead::class.java
@@ -254,25 +254,31 @@ class RxBle(
         it.characteristic.uuid == characteristic.uuid
     }.mergeWith(Completable.fromAction {
         check(source.gatt.readCharacteristic(characteristic)) { "readCharacteristic failed" }
-    }).firstOrError().map { it.value }
+    }).firstOrError().map {
+        check(it.isSuccess) { "readCharacteristic failed, gatt status: ${it.status}" }
+        it.value
+    }
 
     /**
      * Writes a given characteristic and its values to the associated remote device.
      *
      * @param characteristic Characteristic to write on the remote device
-     * @return The new {@code Single} emits the characteristic that was successfully written.
+     * @return A Completable completes the write transaction.
      */
     fun write(
         characteristic: BluetoothGattCharacteristic,
         value: ByteArray,
         writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
-    ) = bleObservable.ofType(CharacteristicWrite::class.java).takeWhile {
-        it.characteristic.uuid != characteristic.uuid
-    }.ignoreElements().mergeWith(Completable.fromAction {
+    ) = bleObservable.ofType(CharacteristicWrite::class.java).filter {
+        it.characteristic.uuid == characteristic.uuid
+    }.firstOrError().flatMapCompletable {
+        check(it.isSuccess) { "writeCharacteristic failed, gatt status: ${it.status}" }
+        Completable.complete()
+    }.mergeWith(Completable.fromAction {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             source.gatt.writeCharacteristic(characteristic, value, writeType).also {
                 check(it == BluetoothStatusCodes.SUCCESS) {
-                    "writeCharacteristic failed: $it"
+                    "writeCharacteristic failed, bluetooth status: $it"
                 }
             }
         } else {
@@ -292,7 +298,7 @@ class RxBle(
      *
      * @param values A bunch of values that will be written
      * @param characteristic Characteristic to write on the remote device
-     * @return A {@code Completable} completes the reliable write transaction.
+     * @return A Completable completes the reliable write transaction.
      */
     fun reliableWrite(
         iterator: Iterable<Triple<BluetoothGattCharacteristic, ByteArray, Int>>,
@@ -304,8 +310,10 @@ class RxBle(
             write(triple.first, value, triple.third)
         }
     }.andThen(
-        bleObservable.ofType(ReliableWriteCompleted::class.java).firstOrError().ignoreElement(
-        ).mergeWith(Completable.fromAction {
+        bleObservable.ofType(ReliableWriteCompleted::class.java).firstOrError().flatMapCompletable {
+            check(it.isSuccess) { "executeReliableWrite failed, gatt status: ${it.status}" }
+            Completable.complete()
+        }.mergeWith(Completable.fromAction {
             check(source.gatt.executeReliableWrite()) { "executeReliableWrite failed" }
         })
     ).doOnError { source.gatt.abortReliableWrite() }
@@ -334,7 +342,7 @@ class RxBle(
      * Reads the value for a given descriptor from the associated remote device.
      *
      * @param descriptor Descriptor value to read from the remote device
-     * @return The new {@code Single} emits the descriptor that was read successfully.
+     * @return The new Single emits the descriptor's value that was read successfully.
      */
     fun read(descriptor: BluetoothGattDescriptor) = bleObservable.ofType(
         DescriptorRead::class.java
@@ -342,24 +350,30 @@ class RxBle(
         it.descriptor.uuid == descriptor.uuid
     }.mergeWith(Completable.fromAction {
         check(source.gatt.readDescriptor(descriptor)) { "readDescriptor failed" }
-    }).firstOrError().map { it.value }
+    }).firstOrError().map {
+        check(it.isSuccess) { "readDescriptor failed, gatt status: ${it.status}" }
+        it.value
+    }
 
     /**
      * Write the value of a given descriptor to the associated remote device.
      *
      * @param descriptor Descriptor to write to the associated remote device
-     * @return The new {@code Single} emits the descriptor that was successfully written.
+     * @return A Completable completes the write transaction.
      */
     fun write(
         descriptor: BluetoothGattDescriptor,
         value: ByteArray,
-    ) = bleObservable.ofType(DescriptorWrite::class.java).takeWhile {
-        it.descriptor.uuid != descriptor.uuid
-    }.ignoreElements().mergeWith(Completable.fromAction {
+    ) = bleObservable.ofType(DescriptorWrite::class.java).filter {
+        it.descriptor.uuid == descriptor.uuid
+    }.firstOrError().flatMapCompletable {
+        check(it.isSuccess) { "writeDescriptor failed, gatt status: ${it.status}" }
+        Completable.complete()
+    }.mergeWith(Completable.fromAction {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             source.gatt.writeDescriptor(descriptor, value).also {
                 check(it == BluetoothStatusCodes.SUCCESS) {
-                    "writeDescriptor failed: $it"
+                    "writeDescriptor failed, bluetooth status: $it"
                 }
             }
         } else {
@@ -399,7 +413,7 @@ class RxBle(
      * Descriptor value can be one of {@link BluetoothGattDescriptor#ENABLE_NOTIFICATION_VALUE},
      * {@link BluetoothGattDescriptor#ENABLE_INDICATION_VALUE} or
      * {@link BluetoothGattDescriptor#DISABLE_NOTIFICATION_VALUE}
-     * @return The new {@code Single} emits the descriptor that was successfully written.
+     * @return A Completable completes the write transaction.
      */
     fun setNotification(
         descriptor: BluetoothGattDescriptor,
@@ -408,7 +422,7 @@ class RxBle(
         check(
             source.gatt.setCharacteristicNotification(
                 descriptor.characteristic,
-                !BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE.contentEquals(descriptor.value)
+                !BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE.contentEquals(value)
             )
         ) { "setCharacteristicNotification failed" }
     })
@@ -416,7 +430,7 @@ class RxBle(
     /**
      * Read the RSSI for a connected remote device.
      *
-     * @return The new {@code Single} that emits the RSSI value.
+     * @return The new Single that emits the RSSI value.
      */
     fun readRemoteRssi() = bleObservable.ofType(ReadRemoteRssi::class.java).mergeWith(
         Completable.fromAction {
@@ -447,7 +461,7 @@ class RxBle(
      * to request a larger MTU size to be able to send more data at once.
      *
      * @param mtu The new MTU size
-     * @return The new {@code Single} that emits the new MTU size whether
+     * @return The new Single that emits the new MTU size whether
      * this operation was successful.
      */
     fun requestMtu(mtu: Int) = mtu().mergeWith(Completable.fromAction {
@@ -457,7 +471,7 @@ class RxBle(
     /**
      * Indicates the MTU for a given device connection has changed.
      *
-     * @return The new {@code Observable} that emits the new MTU size.
+     * @return The new Observable that emits the new MTU size.
      */
     fun mtu() = bleObservable.ofType(MtuChanged::class.java).map {
         it.mtu - 3
@@ -470,7 +484,7 @@ class RxBle(
      * the remote device. {@link BluetoothGatt#discoverServices} should be
      * called to re-discover the services.
      *
-     * @return The new {@code Observable} that emits the old service list.
+     * @return The new Observable that emits the old service list.
      */
     fun service() = bleObservable.ofType(ServiceChanged::class.java).map {
         disableWrite()
