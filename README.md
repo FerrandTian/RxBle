@@ -75,9 +75,9 @@ val ble: RxBle = RxBleManager.instance.create(address)
 ble.connect()   // JUST connect or reconnect
 
 ble.connectWithState()
-.timeout(8, TimeUnit.SECONDS) // Set 8 seconds timeout
-.retry(2).filter { it == BluetoothProfile.STATE_CONNECTED }  // Retry twice until STATE_CONNECTED
-.firstOrError().flatMap { ble.discoverServices() }  // Combining with discoverServices
+.timeout(8, TimeUnit.SECONDS)   // Set 8 seconds timeout
+.retry(2).lastOrError()         // Retry twice until STATE_CONNECTED
+.flatMap { ble.discoverServices() }  // Combining with discoverServices
 .subscribe { }
 
 ble.connectWithServices().subscribe { }
@@ -91,7 +91,7 @@ ble.connectionState().subscribe { }
 
 ### Read and write Characteristic or Descriptor
 
-This fun is thread safe. Use this method to execute write operation one after another.
+This method is thread-safe. Use this method to execute write operation sequentially.
 
 ```kotlin
 fun writeWithQueue(
@@ -105,11 +105,13 @@ fun writeWithQueue(
 )
 ```
 
-NOT thread safe.
+NOT thread-safe.
 
 ```kotlin
 ble.read(characteristic).subscribe { }
-ble.write(characteristic, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT).subscribe { }
+ble.write(
+    characteristic, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+).subscribe { }
 ble.reliableWrite(iterator).subscribe { }
 
 ble.read(descriptor).subscribe { }
@@ -120,7 +122,7 @@ ble.write(descriptor, bytes).subscribe { }
 
 ```kotlin
 ble.setNotification(
-    descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+    descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE   // or disable value
 ).subscribe { }
 ```
 
@@ -136,7 +138,7 @@ ble.characteristic(uuid).subscribe { }
 ble.disconnectWithState().subscribe { }     // Call connect() to reconnect
 ble.disconnect()     // Call connect() to reconnect
 
-ble.close()     // NOT receive any emits again
+ble.close()     // Dispose all resources and close this Bluetooth GATT client
 ```
 
 ## LICENSE

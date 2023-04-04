@@ -106,10 +106,8 @@ class RxBle(
     fun getService(uuid: UUID) = source.gatt.getService(uuid)
 
     /**
-     * Dispose all resources and close this Bluetooth GATT client. Application will not
-     * receive any emits from this remote device after call this method.
-     * Application should call this method as early as possible after it is done with
-     * this GATT client.
+     * Dispose all resources and close this Bluetooth GATT client. Application should
+     * call this method as early as possible after it is done with this GATT client.
      */
     fun close() {
         disableWrite()
@@ -127,10 +125,11 @@ class RxBle(
     }
 
     /**
-     * The connection state.
+     * Get state of the profile connection.
      *
-     * @return Can be one of {@link BluetoothProfile#STATE_DISCONNECTED}
-     * or {@link BluetoothProfile#STATE_CONNECTED}
+     * @return One of {@link BluetoothProfile#STATE_CONNECTED},
+     * {@link BluetoothProfile#STATE_CONNECTING}, {@link BluetoothProfile#STATE_DISCONNECTED},
+     * {@link BluetoothProfile#STATE_DISCONNECTING}
      */
     val connectionState: Int
         get() = source.connectionState
@@ -142,7 +141,8 @@ class RxBle(
         get() = connectionState == BluetoothProfile.STATE_CONNECTED
 
     val isWriteEnabled: Boolean
-        get() = writeEmitter?.isDisposed == false
+        get() = isConnected
+                && writeEmitter?.isDisposed == false
                 && writeDisposable?.isDisposed == false
 
     fun enableWrite() {
@@ -163,9 +163,7 @@ class RxBle(
      * @return The new Observable that emits the new connection state.
      */
     fun connectionState() = bleObservable.ofType(ConnectionStateChange::class.java).map {
-        if (it.state != BluetoothProfile.STATE_CONNECTING
-            && it.state != BluetoothProfile.STATE_CONNECTED
-        ) disableWrite()
+        if (it.state != BluetoothProfile.STATE_CONNECTED) disableWrite()
         it.state
     }
 
@@ -196,22 +194,39 @@ class RxBle(
     } else source.realGatt?.connect() == true
 
     /**
+     * Request a connection parameter update.
+     *
+     * <p>This function will send a connection parameter update request to the
+     * remote device.
+     *
+     * @param connectionPriority Request a specific connection priority. Must be one of {@link
+     * BluetoothGatt#CONNECTION_PRIORITY_BALANCED}, {@link BluetoothGatt#CONNECTION_PRIORITY_HIGH}
+     * or {@link BluetoothGatt#CONNECTION_PRIORITY_LOW_POWER}.
+     * @throws IllegalArgumentException If the parameters are outside of their specified range.
+     */
+    fun requestConnectionPriority(
+        connectionPriority: Int,
+    ) = source.gatt.requestConnectionPriority(connectionPriority)
+
+    /**
      * Connect to remote device.
      *
      * @return The new Observable that emits the new connection state.
      */
     fun connectWithState() = connectionState().mergeWith(Completable.fromAction {
         check(connect()) { "connect failed" }
-    })
+    }).takeUntil {
+        it == BluetoothProfile.STATE_CONNECTED
+    }
 
     /**
      * Connect and discover services to remote device.
      *
      * @return The new Single that emits the discovered services.
      */
-    fun connectWithServices() = connectWithState().takeUntil {
-        it == BluetoothProfile.STATE_CONNECTED
-    }.ignoreElements().andThen(discoverServices())
+    fun connectWithServices() = connectWithState().ignoreElements().andThen(
+        discoverServices()
+    )
 
     /**
      * Discovers services offered by a remote device as well as their
@@ -225,6 +240,20 @@ class RxBle(
         check(source.gatt.discoverServices()) { "discoverServices failed" }
     }).firstOrError().map {
         enableWrite()
+        services
+    }
+
+    /**
+     * Indicates service changed event is received.
+     *
+     * <p>Receiving this event means that the GATT database is out of sync with
+     * the remote device. {@link BluetoothGatt#discoverServices} should be
+     * called to re-discover the services.
+     *
+     * @return The new Observable that emits the old service list.
+     */
+    fun service() = bleObservable.ofType(ServiceChanged::class.java).map {
+        disableWrite()
         services
     }
 
@@ -261,8 +290,14 @@ class RxBle(
 
     /**
      * Writes a given characteristic and its values to the associated remote device.
+     * This method is non-thread-safe.
      *
      * @param characteristic Characteristic to write on the remote device
+     * @param value New value for this characteristic
+     * @param writeType The write type to for this characteristic. Can be one of: {@link
+     * BluetoothGattCharacteristic#WRITE_TYPE_DEFAULT}, {@link
+     * BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE} or {@link
+     * BluetoothGattCharacteristic#WRITE_TYPE_SIGNED}.
      * @return A Completable completes the write transaction.
      */
     fun write(
@@ -296,8 +331,7 @@ class RxBle(
      * <p>This function will commit all queued up characteristic write
      * operations for a given remote device.
      *
-     * @param values A bunch of values that will be written
-     * @param characteristic Characteristic to write on the remote device
+     * @param iterator A bunch of values and Characteristics that will be written
      * @return A Completable completes the reliable write transaction.
      */
     fun reliableWrite(
@@ -318,15 +352,38 @@ class RxBle(
         })
     ).doOnError { source.gatt.abortReliableWrite() }
 
+    /**
+     * Writes a given characteristic and its values sequentially to the associated
+     * remote device. This method is thread-safe.
+     *
+     * @param characteristic Characteristic to write on the remote device
+     * @param value New value for this characteristic
+     * @param writeType The write type to for this characteristic. Can be one of: {@link
+     * BluetoothGattCharacteristic#WRITE_TYPE_DEFAULT}, {@link
+     * BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE} or {@link
+     * BluetoothGattCharacteristic#WRITE_TYPE_SIGNED}.
+     */
     fun writeInQueue(
         characteristic: BluetoothGattCharacteristic,
         value: ByteArray,
         writeType: Int = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
     ) {
-        requireNotNull(writeEmitter) { "writeCharacteristic failed" }
-        writeEmitter!!.onNext(Triple(characteristic, value, writeType))
+        check(isWriteEnabled) { "writeCharacteristic failed" }
+        writeEmitter?.onNext(Triple(characteristic, value, writeType))
     }
 
+    /**
+     * Writes a given characteristic and its values sequentially to the associated
+     * remote device. This method is thread-safe.
+     *
+     * @param characteristic Characteristic to write on the remote device
+     * @param value New value for this characteristic
+     * @param writeType The write type to for this characteristic. Can be one of: {@link
+     * BluetoothGattCharacteristic#WRITE_TYPE_DEFAULT}, {@link
+     * BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE} or {@link
+     * BluetoothGattCharacteristic#WRITE_TYPE_SIGNED}.
+     * @return A Completable completes the write transaction.
+     */
     fun writeWithQueue(
         characteristic: BluetoothGattCharacteristic,
         value: ByteArray,
@@ -357,8 +414,10 @@ class RxBle(
 
     /**
      * Write the value of a given descriptor to the associated remote device.
+     * This method is non-thread-safe.
      *
      * @param descriptor Descriptor to write to the associated remote device
+     * @param value New value for this descriptor
      * @return A Completable completes the write transaction.
      */
     fun write(
@@ -384,18 +443,33 @@ class RxBle(
         }
     })
 
+    /**
+     * Write the value of a given descriptor sequentially to the associated remote device.
+     * This method is thread-safe.
+     *
+     * @param descriptor Descriptor to write to the associated remote device
+     * @param value New value for this descriptor
+     */
     fun writeInQueue(
         descriptor: BluetoothGattDescriptor,
         value: ByteArray,
     ) {
-        requireNotNull(writeEmitter) { "writeDescriptor failed" }
-        writeEmitter!!.onNext(
+        check(isWriteEnabled) { "writeDescriptor failed" }
+        writeEmitter?.onNext(
             Triple(
                 descriptor, value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
             )
         )
     }
 
+    /**
+     * Write the value of a given descriptor sequentially to the associated remote device.
+     * This method is thread-safe.
+     *
+     * @param descriptor Descriptor to write to the associated remote device
+     * @param value New value for this descriptor
+     * @return A Completable completes the write transaction.
+     */
     fun writeWithQueue(
         descriptor: BluetoothGattDescriptor,
         value: ByteArray,
@@ -409,10 +483,28 @@ class RxBle(
     /**
      * Enable or disable notifications/indications for a given characteristic.
      *
+     * <p>Once notifications are enabled for a characteristic, a
+     * {@link BluetoothGattCallback#onCharacteristicChanged} callback will be
+     * triggered if the remote device indicates that the given characteristic
+     * has changed.
+     *
+     * @param characteristic The characteristic for which to enable notifications
+     * @param enable Set to true to enable notifications/indications
+     * @return true, if the requested notification status was set successfully
+     */
+    fun setNotification(
+        characteristic: BluetoothGattCharacteristic,
+        enable: Boolean,
+    ) = source.gatt.setCharacteristicNotification(characteristic, enable)
+
+    /**
+     * Enable or disable notifications/indications for a given descriptor.
+     *
      * @param descriptor Descriptor to write to the associated remote device.
-     * Descriptor value can be one of {@link BluetoothGattDescriptor#ENABLE_NOTIFICATION_VALUE},
-     * {@link BluetoothGattDescriptor#ENABLE_INDICATION_VALUE} or
-     * {@link BluetoothGattDescriptor#DISABLE_NOTIFICATION_VALUE}
+     * @param value New value for this descriptor. Can be one of {@link
+     * BluetoothGattDescriptor#ENABLE_NOTIFICATION_VALUE}, {@link
+     * BluetoothGattDescriptor#ENABLE_INDICATION_VALUE} or {@link
+     * BluetoothGattDescriptor#DISABLE_NOTIFICATION_VALUE}
      * @return A Completable completes the write transaction.
      */
     fun setNotification(
@@ -420,7 +512,7 @@ class RxBle(
         value: ByteArray,
     ) = write(descriptor, value).startWith(Completable.fromAction {
         check(
-            source.gatt.setCharacteristicNotification(
+            setNotification(
                 descriptor.characteristic,
                 !BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE.contentEquals(value)
             )
@@ -439,36 +531,6 @@ class RxBle(
     ).firstOrError().map { it.rssi }
 
     /**
-     * Request a connection parameter update.
-     *
-     * <p>This function will send a connection parameter update request to the
-     * remote device.
-     *
-     * @param connectionPriority Request a specific connection priority. Must be one of {@link
-     * BluetoothGatt#CONNECTION_PRIORITY_BALANCED}, {@link BluetoothGatt#CONNECTION_PRIORITY_HIGH}
-     * or {@link BluetoothGatt#CONNECTION_PRIORITY_LOW_POWER}.
-     * @throws IllegalArgumentException If the parameters are outside of their specified range.
-     */
-    fun requestConnectionPriority(
-        connectionPriority: Int,
-    ) = source.gatt.requestConnectionPriority(connectionPriority)
-
-    /**
-     * Request an MTU size used for a given connection.
-     *
-     * <p>When performing a write request operation (write without response),
-     * the data sent is truncated to the MTU size. This function may be used
-     * to request a larger MTU size to be able to send more data at once.
-     *
-     * @param mtu The new MTU size
-     * @return The new Single that emits the new MTU size whether
-     * this operation was successful.
-     */
-    fun requestMtu(mtu: Int) = mtu().mergeWith(Completable.fromAction {
-        check(source.gatt.requestMtu(mtu)) { "requestMtu failed" }
-    }).firstOrError()
-
-    /**
      * Indicates the MTU for a given device connection has changed.
      *
      * @return The new Observable that emits the new MTU size.
@@ -478,16 +540,16 @@ class RxBle(
     }
 
     /**
-     * Indicates service changed event is received.
+     * Request an MTU size used for a given connection.
      *
-     * <p>Receiving this event means that the GATT database is out of sync with
-     * the remote device. {@link BluetoothGatt#discoverServices} should be
-     * called to re-discover the services.
+     * <p>When performing a write request operation (write without response),
+     * the data sent is truncated to the MTU size. This function may be used
+     * to request a larger MTU size to be able to send more data at once.
      *
-     * @return The new Observable that emits the old service list.
+     * @param mtu The new MTU size
+     * @return The new Single that emits the new MTU size.
      */
-    fun service() = bleObservable.ofType(ServiceChanged::class.java).map {
-        disableWrite()
-        services
-    }
+    fun requestMtu(mtu: Int) = mtu().mergeWith(Completable.fromAction {
+        check(source.gatt.requestMtu(mtu)) { "requestMtu failed" }
+    }).firstOrError()
 }

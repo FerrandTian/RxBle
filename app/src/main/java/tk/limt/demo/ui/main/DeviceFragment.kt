@@ -105,12 +105,10 @@ class DeviceFragment : TTFragment<RefreshRecyclerBinding>(),
 
     override fun onRefresh() {
         if (checkPermissions() && checkBluetooth()) {
-            (if (manager.obtain(device.address).isDisconnected) manager.obtain(device.address)
-                .connectWithState().timeout(8, TimeUnit.SECONDS).retry(
-                    2
-                ).filter {
-                    it == BluetoothProfile.STATE_CONNECTED
-                }.firstOrError() else Single.just(BluetoothProfile.STATE_CONNECTED)).flatMap {
+            (if (manager.obtain(device.address).isDisconnected) manager.obtain(
+                device.address
+            ).connectWithState().timeout(8, TimeUnit.SECONDS).retry(2).lastOrError(
+            ) else Single.just(BluetoothProfile.STATE_CONNECTED)).flatMap {
                 manager.obtain(device.address).discoverServices()
             }.observeOn(
                 AndroidSchedulers.mainThread()
