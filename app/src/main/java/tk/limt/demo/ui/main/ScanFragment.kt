@@ -42,7 +42,6 @@ import tk.limt.demo.adapter.ScanAdapter
 import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ItemScanBinding
 import tk.limt.demo.databinding.RefreshRecyclerBinding
-import tk.limt.demo.impl.OnTabChangeListener
 import tt.tt.component.TTFragment
 import tt.tt.component.TTHolder
 import tt.tt.component.TTOnClickListener

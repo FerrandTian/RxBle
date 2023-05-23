@@ -36,7 +36,7 @@ import tk.limt.demo.adapter.ServiceAdapter
 import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ItemServiceBinding
 import tk.limt.demo.databinding.RefreshRecyclerBinding
-import tk.limt.demo.impl.OnTabChangeListener
+import tk.limt.utils.hex
 import tt.tt.component.TTFragment
 import tt.tt.component.TTHolder
 import tt.tt.component.TTOnClickListener
@@ -81,13 +81,13 @@ class DeviceFragment : TTFragment<RefreshRecyclerBinding>(),
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.fragment_device, menu)
         mnConnect = menu.findItem(R.id.connect)
-        updateUiWithData(manager.obtain(device.address).connectionState)
+        updateUiWithData(manager.getConnectionState(device))
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.connect -> {
-                if (manager.isConnected(device.address)) {
+                if (manager.isConnected(device)) {
                     manager.obtain(device.address).disconnect()
                 } else {
                     vb.refresh.isRefreshing = true
@@ -105,21 +105,16 @@ class DeviceFragment : TTFragment<RefreshRecyclerBinding>(),
 
     override fun onRefresh() {
         if (checkPermissions() && checkBluetooth()) {
-            (if (manager.obtain(device.address).isDisconnected) manager.obtain(
-                device.address
-            ).connectWithState().timeout(8, TimeUnit.SECONDS).retry(2).lastOrError(
-            ) else Single.just(BluetoothProfile.STATE_CONNECTED)).flatMap {
-                manager.obtain(device.address).discoverServices()
-            }.observeOn(
-                AndroidSchedulers.mainThread()
-            ).doAfterTerminate {
+            (if (manager.isConnected(device)) Single.just(
+                manager.obtain(device.address).services
+            ) else manager.obtain(device.address).connectWithServices().timeout(
+                16, TimeUnit.SECONDS
+            ).retry(1)).observeOn(AndroidSchedulers.mainThread()).doFinally {
                 vb.refresh.isRefreshing = false
             }.subscribe(object : TTSingleObserver<List<BluetoothGattService>>(disposables) {
                 override fun onSuccess(t: List<BluetoothGattService>) {
                     super.onSuccess(t)
-                    adapter.clear()
-                    adapter.addAll(t)
-                    adapter.notifyDataSetChanged()
+                    updateUiWithData(t)
                 }
 
                 override fun onError(e: Throwable) {
@@ -140,6 +135,19 @@ class DeviceFragment : TTFragment<RefreshRecyclerBinding>(),
             }
             BluetoothProfile.STATE_DISCONNECTED -> {
                 mnConnect?.title = ctx.getString(tt.tt.R.string.tt_connect)
+            }
+        }
+    }
+
+    fun updateUiWithData(list: List<BluetoothGattService>) {
+        adapter.setItems(list)
+        list.forEach { s ->
+            println("${s.uuid}")
+            s.characteristics.forEach { c ->
+                println("  |-${c.uuid}, ${c.value.hex(true)}")
+                c.descriptors.forEach { d ->
+                    println("      |-${d.uuid}, ${d.value.hex(true)}")
+                }
             }
         }
     }

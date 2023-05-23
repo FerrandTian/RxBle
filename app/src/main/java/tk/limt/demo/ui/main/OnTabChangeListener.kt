@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package tk.limt.demo.impl
+package tk.limt.demo.ui.main
 
 /**
  * @author tianfeng

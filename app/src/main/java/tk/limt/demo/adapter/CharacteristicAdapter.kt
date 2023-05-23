@@ -79,9 +79,9 @@ class CharacteristicAdapter(
                             override fun onComplete() {
                                 super.onComplete()
                                 h.vb.ivNotify.setImageResource(
-                                    if (ch.isNotificationEnabled) {
-                                        R.drawable.ic_download_multiple_disable_24
-                                    } else R.drawable.ic_download_multiple_24
+                                    if (
+                                        ch.isNotificationEnabled
+                                    ) R.drawable.ic_download_multiple_disable_24 else R.drawable.ic_download_multiple_24
                                 )
                                 h.vb.descriptors.adapter?.notifyItemChanged(0)
                             }
@@ -120,11 +120,15 @@ class CharacteristicAdapter(
                         item.isNotificationEnabled
                     ) R.drawable.ic_download_multiple_disable_24 else R.drawable.ic_download_multiple_24
                 )
-                vb.descriptors.adapter = DescriptorAdapter(address, item.descriptors)
+                val adapter = vb.descriptors.adapter
+                if (adapter is DescriptorAdapter) adapter.setItems(
+                    item.descriptors
+                ) else vb.descriptors.adapter = DescriptorAdapter(address, item.descriptors)
                 visible(vb.ivNotify, vb.tvDescriptorsTitle, vb.descriptors)
             } else {
                 gone(vb.ivNotify, vb.tvDescriptorsTitle, vb.descriptors)
             }
+            gone(vb.tvValueTitle, vb.tvValue)
             manager.obtain(address).characteristic(item.uuid).observeOn(
                 AndroidSchedulers.mainThread()
             ).subscribe(object : TTObserver<ByteArray>(holder.disposables) {
@@ -141,8 +145,7 @@ class CharacteristicAdapter(
     }
 
     fun showSendDialog(
-        holder: TTHolder<ItemCharacteristicBinding>,
-        characteristic: BluetoothGattCharacteristic,
+        holder: TTHolder<ItemCharacteristicBinding>, characteristic: BluetoothGattCharacteristic
     ) {
         AlertDialog.Builder(ctx).setTitle(R.string.write_value).setView(
             R.layout.dialog_send

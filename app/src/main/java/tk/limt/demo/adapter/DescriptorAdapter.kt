@@ -20,6 +20,7 @@ import android.bluetooth.BluetoothGattDescriptor
 import android.view.View
 import androidx.viewbinding.ViewBinding
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.disposables.Disposable
 import tk.limt.demo.R
 import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ItemDescriptorBinding
@@ -57,8 +58,7 @@ class DescriptorAdapter(
                         super.onError(e)
                         e.message?.let { it -> ctx.toast(it) }
                     }
-                }
-                )
+                })
             }
         }
     }
@@ -74,7 +74,7 @@ class DescriptorAdapter(
             item.value?.let {
                 vb.tvValue.text = it.hex(true)
                 visible(vb.tvValueTitle, vb.tvValue)
-            } ?: run { gone(vb.tvValueTitle, vb.tvValue) }
+            } ?: gone(vb.tvValueTitle, vb.tvValue)
             setClickListener(
                 clickListener, holder as TTHolder<ItemDescriptorBinding>, item, vb.ivRead
             )

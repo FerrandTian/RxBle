@@ -33,11 +33,9 @@ class DeviceManager(var ctx: Context) {
     fun scan(filters: List<ScanFilter>?, settings: ScanSettings?) =
         bleManager.scan(filters, settings)
 
-    fun isConnected(address: String) = isConnected(bleManager.getRemoteDevice(address))
+    fun getConnectionState(device: BluetoothDevice) = bleManager.getConnectionState(device)
 
-    fun isConnected(device: BluetoothDevice) = bleMap[
-            device.address
-    ]?.isConnected == true && bleManager.isConnected(device)
+    fun isConnected(device: BluetoothDevice) = bleManager.isConnected(device)
 
     fun obtain(address: String) = bleMap[address] ?: bleManager.create(
         address, false

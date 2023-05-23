@@ -30,6 +30,7 @@ import android.view.WindowManager
 import android.widget.Checkable
 import android.widget.CompoundButton
 import android.widget.CompoundButton.OnCheckedChangeListener
+import android.widget.PopupMenu
 import android.widget.PopupWindow
 
 fun requestFullscreen(activity: Activity) {
@@ -170,5 +171,9 @@ fun <T : DialogInterface> cancel(vararg dialogs: T?) {
 }
 
 fun <T : PopupWindow> dismiss(vararg windows: T?) {
-    for (window in windows) if (window != null && window.isShowing) window.dismiss()
+    for (window in windows) window?.dismiss()
+}
+
+fun <T : PopupMenu> dismiss(vararg menus: T?) {
+    for (menu in menus) menu?.dismiss()
 }

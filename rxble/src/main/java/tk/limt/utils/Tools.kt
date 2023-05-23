@@ -23,14 +23,14 @@ import kotlin.math.ceil
 fun BluetoothGattCharacteristic.isPropertySupported(property: Int) = property and properties != 0
 
 val BluetoothGattCharacteristic.isNotificationSupported: Boolean
-    get() = (isPropertySupported(BluetoothGattCharacteristic.PROPERTY_NOTIFY) || isPropertySupported(
-        BluetoothGattCharacteristic.PROPERTY_INDICATE
-    )) && descriptors.isNotEmpty()
+    get() = (isPropertySupported(BluetoothGattCharacteristic.PROPERTY_NOTIFY)
+            || isPropertySupported(BluetoothGattCharacteristic.PROPERTY_INDICATE))
+            && descriptors.isNotEmpty()
 
 val BluetoothGattCharacteristic.isNotificationEnabled: Boolean
-    get() = isNotificationSupported && descriptors[0].value != null && !BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE.contentEquals(
-        descriptors[0].value
-    )
+    get() = isNotificationSupported && descriptors[0]?.value?.let {
+        !BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE.contentEquals(it)
+    } ?: false
 
 /**
  * Returns a string contains with each value in hexadecimal.

@@ -22,7 +22,6 @@ import com.google.android.material.tabs.TabLayoutMediator
 import tk.limt.demo.adapter.MainPagerAdapter
 import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ActivityMainBinding
-import tk.limt.demo.impl.OnTabChangeListener
 import tt.tt.component.TTActivity
 
 class MainActivity : TTActivity<ActivityMainBinding>(), OnTabChangeListener<BluetoothDevice> {

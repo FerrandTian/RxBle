@@ -48,15 +48,23 @@ class ServiceAdapter(
                 item.uuid.toString(), ctx.getString(R.string.unknown_service)
             )
             vb.tvUuid.text = item.uuid.toString()
-            vb.tvType.setText(if (item.type == BluetoothGattService.SERVICE_TYPE_PRIMARY) R.string.primary_service else R.string.secondary_service)
+            vb.tvType.setText(
+                if (
+                    item.type == BluetoothGattService.SERVICE_TYPE_PRIMARY
+                ) R.string.primary_service else R.string.secondary_service
+            )
             if (item.characteristics.isNotEmpty()) {
-                vb.recycler.adapter = CharacteristicAdapter(address, item.characteristics)
+                val adapter = vb.recycler.adapter
+                if (adapter is CharacteristicAdapter) adapter.setItems(
+                    item.characteristics
+                ) else vb.recycler.adapter = CharacteristicAdapter(address, item.characteristics)
                 gone(vb.tvEmpty)
                 visible(vb.recycler)
             } else {
                 gone(vb.recycler)
                 visible(vb.tvEmpty)
             }
+            gone(vb.llCharacteristics)
             setClickListener(
                 clickListener, holder as TTHolder<ItemServiceBinding>, item, vb.service
             )

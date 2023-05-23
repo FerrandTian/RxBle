@@ -71,78 +71,8 @@ class RxBle(
     }.subscribeOn(Schedulers.io()).publish()
     private var writeDisposable: Disposable? = null
 
-    /**
-     * Get MTU size of current connection. Default MTU size is 20.
-     */
-    val mtu: Int
-        get() = source.mtu
-
-    /**
-     * Returns a list of GATT services offered by the remote device.
-     *
-     * <p>This function requires that service discovery has been completed
-     * for the given device.
-     *
-     * @return List of services on the remote device. Returns an empty list if service discovery has
-     * not yet been performed.
-     */
-    val services: List<BluetoothGattService>
-        get() = source.gatt.services
-
-    /**
-     * Returns a {@link android.bluetooth#BluetoothGattService}, if the requested UUID is
-     * supported by the remote device.
-     *
-     * <p>This function requires that service discovery has been completed
-     * for the given device.
-     *
-     * <p>If multiple instances of the same service (as identified by UUID)
-     * exist, the first instance of the service is returned.
-     *
-     * @param uuid UUID of the requested service
-     * @return BluetoothGattService if supported, or null if the requested service is not offered by
-     * the remote device.
-     */
-    fun getService(uuid: UUID) = source.gatt.getService(uuid)
-
-    /**
-     * Dispose all resources and close this Bluetooth GATT client. Application should
-     * call this method as early as possible after it is done with this GATT client.
-     */
-    fun close() {
-        disableWrite()
-        bleDisposable?.dispose()
-        bleDisposable = null
-    }
-
-    /**
-     * Disconnects an established connection, or cancels a connection attempt
-     * currently in progress.
-     */
-    fun disconnect() {
-        disableWrite()
-        source.realGatt?.disconnect()
-    }
-
-    /**
-     * Get state of the profile connection.
-     *
-     * @return One of {@link BluetoothProfile#STATE_CONNECTED},
-     * {@link BluetoothProfile#STATE_CONNECTING}, {@link BluetoothProfile#STATE_DISCONNECTED},
-     * {@link BluetoothProfile#STATE_DISCONNECTING}
-     */
-    val connectionState: Int
-        get() = source.connectionState
-
-    val isDisconnected: Boolean
-        get() = connectionState == BluetoothProfile.STATE_DISCONNECTED
-
-    val isConnected: Boolean
-        get() = connectionState == BluetoothProfile.STATE_CONNECTED
-
     val isWriteEnabled: Boolean
-        get() = isConnected
-                && writeEmitter?.isDisposed == false
+        get() = writeEmitter?.isDisposed == false
                 && writeDisposable?.isDisposed == false
 
     fun enableWrite() {
@@ -168,16 +98,36 @@ class RxBle(
     }
 
     /**
+     * Dispose all resources and close this Bluetooth GATT client. Application should
+     * call this method as early as possible after it is done with this GATT client.
+     */
+    fun close() {
+        disableWrite()
+        source.close()
+        bleDisposable?.dispose()
+        bleDisposable = null
+    }
+
+    /**
+     * Disconnects an established connection, or cancels a connection attempt
+     * currently in progress.
+     */
+    fun disconnect() {
+        disableWrite()
+        source.disconnect()
+    }
+
+    /**
      * Disconnects an established connection, or cancels a connection attempt
      * currently in progress.
      *
      * @return The new Observable that emits the new connection state.
      */
-    fun disconnectWithState() = connectionState().takeUntil {
-        it == BluetoothProfile.STATE_DISCONNECTED
-    }.mergeWith(Completable.fromAction {
+    fun disconnectWithState() = connectionState().mergeWith(Completable.fromAction {
         disconnect()
-    })
+    }).takeUntil {
+        it == BluetoothProfile.STATE_DISCONNECTED
+    }
 
     /**
      * Connect to GATT Server hosted by this device. Caller acts as GATT client.
@@ -186,27 +136,11 @@ class RxBle(
      *
      * @return true, if the connection attempt was initiated successfully
      */
-    fun connect() = if (bleDisposable == null
-        || bleDisposable?.isDisposed == true
-    ) {
-        bleDisposable = bleObservable.connect()
-        true
-    } else source.realGatt?.connect() == true
-
-    /**
-     * Request a connection parameter update.
-     *
-     * <p>This function will send a connection parameter update request to the
-     * remote device.
-     *
-     * @param connectionPriority Request a specific connection priority. Must be one of {@link
-     * BluetoothGatt#CONNECTION_PRIORITY_BALANCED}, {@link BluetoothGatt#CONNECTION_PRIORITY_HIGH}
-     * or {@link BluetoothGatt#CONNECTION_PRIORITY_LOW_POWER}.
-     * @throws IllegalArgumentException If the parameters are outside of their specified range.
-     */
-    fun requestConnectionPriority(
-        connectionPriority: Int,
-    ) = source.gatt.requestConnectionPriority(connectionPriority)
+    fun connect() {
+        if (bleDisposable == null
+            || bleDisposable?.isDisposed == true
+        ) bleDisposable = bleObservable.connect() else source.connect()
+    }
 
     /**
      * Connect to remote device.
@@ -214,19 +148,43 @@ class RxBle(
      * @return The new Observable that emits the new connection state.
      */
     fun connectWithState() = connectionState().mergeWith(Completable.fromAction {
-        check(connect()) { "connect failed" }
-    }).takeUntil {
-        it == BluetoothProfile.STATE_CONNECTED
-    }
+        connect()
+    }).takeUntil { it == BluetoothProfile.STATE_CONNECTED }
 
     /**
      * Connect and discover services to remote device.
      *
      * @return The new Single that emits the discovered services.
      */
-    fun connectWithServices() = connectWithState().ignoreElements().andThen(
-        discoverServices()
-    )
+    fun connectWithServices() = connectWithState().ignoreElements().andThen(discoverServices())
+
+    /**
+     * Returns a {@link android.bluetooth#BluetoothGattService}, if the requested UUID is
+     * supported by the remote device.
+     *
+     * <p>This function requires that service discovery has been completed
+     * for the given device.
+     *
+     * <p>If multiple instances of the same service (as identified by UUID)
+     * exist, the first instance of the service is returned.
+     *
+     * @param uuid UUID of the requested service
+     * @return BluetoothGattService if supported, or null if the requested service is not offered by
+     * the remote device.
+     */
+    fun getService(uuid: UUID) = source.gatt.getService(uuid)
+
+    /**
+     * Returns a list of GATT services offered by the remote device.
+     *
+     * <p>This function requires that service discovery has been completed
+     * for the given device.
+     *
+     * @return List of services on the remote device. Returns an empty list if service discovery has
+     * not yet been performed.
+     */
+    val services: List<BluetoothGattService>
+        get() = source.gatt.services
 
     /**
      * Discovers services offered by a remote device as well as their
@@ -310,18 +268,16 @@ class RxBle(
         check(it.isSuccess) { "writeCharacteristic failed, gatt status: ${it.status}" }
         Completable.complete()
     }.mergeWith(Completable.fromAction {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            source.gatt.writeCharacteristic(characteristic, value, writeType).also {
-                check(it == BluetoothStatusCodes.SUCCESS) {
-                    "writeCharacteristic failed, bluetooth status: $it"
-                }
+        characteristic.value = value
+        characteristic.writeType = writeType
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.gatt.writeCharacteristic(
+            characteristic, value, writeType
+        ).also {
+            check(it == BluetoothStatusCodes.SUCCESS) {
+                "writeCharacteristic failed, bluetooth status: $it"
             }
-        } else {
-            characteristic.value = value
-            characteristic.writeType = writeType
-            check(source.gatt.writeCharacteristic(characteristic)) {
-                "writeCharacteristic failed"
-            }
+        } else check(source.gatt.writeCharacteristic(characteristic)) {
+            "writeCharacteristic failed"
         }
     })
 
@@ -429,18 +385,14 @@ class RxBle(
         check(it.isSuccess) { "writeDescriptor failed, gatt status: ${it.status}" }
         Completable.complete()
     }.mergeWith(Completable.fromAction {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            source.gatt.writeDescriptor(descriptor, value).also {
-                check(it == BluetoothStatusCodes.SUCCESS) {
-                    "writeDescriptor failed, bluetooth status: $it"
-                }
+        descriptor.value = value
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.gatt.writeDescriptor(
+            descriptor, value
+        ).also {
+            check(it == BluetoothStatusCodes.SUCCESS) {
+                "writeDescriptor failed, bluetooth status: $it"
             }
-        } else {
-            descriptor.value = value
-            check(source.gatt.writeDescriptor(descriptor)) {
-                "writeDescriptor failed"
-            }
-        }
+        } else check(source.gatt.writeDescriptor(descriptor)) { "writeDescriptor failed" }
     })
 
     /**
@@ -456,9 +408,7 @@ class RxBle(
     ) {
         check(isWriteEnabled) { "writeDescriptor failed" }
         writeEmitter?.onNext(
-            Triple(
-                descriptor, value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-            )
+            Triple(descriptor, value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
         )
     }
 
@@ -531,6 +481,12 @@ class RxBle(
     ).firstOrError().map { it.rssi }
 
     /**
+     * Get MTU size of current connection. Default MTU size is 20.
+     */
+    val mtu: Int
+        get() = source.mtu
+
+    /**
      * Indicates the MTU for a given device connection has changed.
      *
      * @return The new Observable that emits the new MTU size.
@@ -552,4 +508,19 @@ class RxBle(
     fun requestMtu(mtu: Int) = mtu().mergeWith(Completable.fromAction {
         check(source.gatt.requestMtu(mtu)) { "requestMtu failed" }
     }).firstOrError()
+
+    /**
+     * Request a connection parameter update.
+     *
+     * <p>This function will send a connection parameter update request to the
+     * remote device.
+     *
+     * @param connectionPriority Request a specific connection priority. Must be one of {@link
+     * BluetoothGatt#CONNECTION_PRIORITY_BALANCED}, {@link BluetoothGatt#CONNECTION_PRIORITY_HIGH}
+     * or {@link BluetoothGatt#CONNECTION_PRIORITY_LOW_POWER}.
+     * @throws IllegalArgumentException If the parameters are outside of their specified range.
+     */
+    fun requestConnectionPriority(
+        connectionPriority: Int,
+    ) = source.gatt.requestConnectionPriority(connectionPriority)
 }
