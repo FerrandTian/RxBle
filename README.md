@@ -29,13 +29,13 @@ Then you can add the dependency to your **app** build.gradle file:
 ```
 dependencies {
     ...
-    implementation 'com.github.FerrandTian:RxBle:1.0.7'
+    implementation 'com.github.FerrandTian:RxBle:1.0.8'
     
     // Or
-    implementation 'com.github.FerrandTian.RxBle:rxble:1.0.7'
+    implementation 'com.github.FerrandTian.RxBle:rxble:1.0.8'
     
     // Optional
-    implementation 'com.github.FerrandTian.RxBle:ttbase:1.0.7'
+    implementation 'com.github.FerrandTian.RxBle:ttbase:1.0.8'
 }
 ```
 
@@ -57,7 +57,7 @@ RxBleManager.instance.scan(
     null,
     ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
 )   // Original scan parameters are supported
-.filter { it.device.name != null }  // Use Rx filter function
+.filter { it.result.device.name != null }  // Use Rx filter function
 .takeUntil(Observable.timer(10, TimeUnit.SECONDS)) // Unsubscribe after 10 seconds
 .observeOn(AndroidSchedulers.mainThread())
 .subscribe { }

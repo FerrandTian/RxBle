@@ -16,10 +16,21 @@
 
 package tk.limt.rxble.model
 
-internal open class RxScanResult {
+open class RxScanResult {
 
-    class ScanResult(val callbackType: Int, val result: android.bluetooth.le.ScanResult) :
-        RxScanResult()
+    class ScanResult(
+        /**
+         * Determines how this callback was triggered. Could be one of {@link
+         * ScanSettings#CALLBACK_TYPE_ALL_MATCHES}, {@link ScanSettings#CALLBACK_TYPE_FIRST_MATCH} or
+         * {@link ScanSettings#CALLBACK_TYPE_MATCH_LOST}
+         */
+        val callbackType: Int,
+
+        /**
+         * A Bluetooth LE scan result.
+         */
+        val result: android.bluetooth.le.ScanResult
+    ) : RxScanResult()
 
     class ScanResults(val results: List<android.bluetooth.le.ScanResult>) : RxScanResult()
 

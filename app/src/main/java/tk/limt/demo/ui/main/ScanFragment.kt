@@ -84,7 +84,7 @@ class ScanFragment : TTFragment<RefreshRecyclerBinding>(), SwipeRefreshLayout.On
             deviceManager.scan(
                 null,
                 ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-            ).filter { it.device.name != null }.takeUntil(
+            ).map { it.result }.filter { it.device.name != null }.takeUntil(
                 Observable.timer(10, TimeUnit.SECONDS)
             ).observeOn(AndroidSchedulers.mainThread()).doAfterTerminate {
                 vb.refresh.isRefreshing = false

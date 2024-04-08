@@ -20,6 +20,7 @@ import android.bluetooth.le.*
 import tk.limt.rxble.model.RxScanResult
 import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.core.ObservableOnSubscribe
+import tk.limt.rxble.model.ScanFailedException
 import java.lang.Exception
 
 internal class RxBleScanOnSubscribe(
@@ -38,7 +39,12 @@ internal class RxBleScanOnSubscribe(
             }
 
             override fun onScanFailed(errorCode: Int) {
-                emitter.onError(Throwable("Scan failed, error code: $errorCode"))
+                emitter.onError(
+                    ScanFailedException(
+                        errorCode,
+                        "Scan failed, error code: $errorCode"
+                    )
+                )
             }
         }
         scanner.startScan(filters, settings, callback)

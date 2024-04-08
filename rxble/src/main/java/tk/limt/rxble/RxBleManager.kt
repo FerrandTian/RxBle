@@ -185,11 +185,11 @@ class RxBleManager(private val context: Context) {
      *
      * @param filters {@link ScanFilter}s for finding exact BLE devices.
      * @param settings Settings for the scan.
-     * @return The new {@code Observable} that emits the ScanResult.
+     * @return The new {@code Observable} that emits the RxScanResult.ScanResult.
      */
     fun scan(filters: List<ScanFilter>?, settings: ScanSettings?) = Observable.create(
         RxBleScanOnSubscribe(adapter.bluetoothLeScanner, filters, settings)
-    ).ofType(RxScanResult.ScanResult::class.java).map { it.result }
+    ).ofType(RxScanResult.ScanResult::class.java)
 
     /**
      * Start Bluetooth LE scan. For unfiltered scans, scanning is stopped on screen off
@@ -205,12 +205,11 @@ class RxBleManager(private val context: Context) {
      *
      * @param filters {@link ScanFilter}s for finding exact BLE devices.
      * @param settings Settings for the scan.
-     * @return The new {@code Observable} that emits the list of ScanResult.
+     * @return The new {@code Observable} that emits the RxScanResult.ScanResults.
      */
     fun scanList(filters: List<ScanFilter>?, settings: ScanSettings?) = Observable.create(
         RxBleScanOnSubscribe(adapter.bluetoothLeScanner, filters, settings)
-    ).ofType(RxScanResult.ScanResults::class.java).map { it.results }
-
+    ).ofType(RxScanResult.ScanResults::class.java)
 
     /**
      * Create o new instance of {@code RxBle}. You can use RxBle to conduct
