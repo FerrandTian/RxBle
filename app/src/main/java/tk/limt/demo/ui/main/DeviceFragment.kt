@@ -37,14 +37,14 @@ import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ItemServiceBinding
 import tk.limt.demo.databinding.RefreshRecyclerBinding
 import tk.limt.utils.hex
-import tt.tt.component.TTFragment
-import tt.tt.component.TTHolder
-import tt.tt.component.TTOnClickListener
-import tt.tt.rx.TTObserver
-import tt.tt.rx.TTSingleObserver
-import tt.tt.utils.isBluetoothEnabled
-import tt.tt.utils.permissionGranted
-import tt.tt.utils.toast
+import tt.base.component.TTFragment
+import tt.base.component.TTHolder
+import tt.base.component.TTOnClickListener
+import tt.base.rx.TTObserver
+import tt.base.rx.TTSingleObserver
+import tt.base.utils.isBluetoothEnabled
+import tt.base.utils.permissionGranted
+import tt.base.utils.toast
 import java.util.concurrent.TimeUnit
 
 class DeviceFragment : TTFragment<RefreshRecyclerBinding>(),
@@ -131,10 +131,10 @@ class DeviceFragment : TTFragment<RefreshRecyclerBinding>(),
     fun updateUiWithData(state: Int) {
         when (state) {
             BluetoothProfile.STATE_CONNECTED -> {
-                mnConnect?.title = ctx.getString(tt.tt.R.string.tt_disconnect)
+                mnConnect?.title = ctx.getString(tt.base.R.string.tt_disconnect)
             }
             BluetoothProfile.STATE_DISCONNECTED -> {
-                mnConnect?.title = ctx.getString(tt.tt.R.string.tt_connect)
+                mnConnect?.title = ctx.getString(tt.base.R.string.tt_connect)
             }
         }
     }

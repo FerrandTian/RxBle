@@ -22,9 +22,9 @@ import android.view.View
 import androidx.viewbinding.ViewBinding
 import tk.limt.demo.databinding.ItemScanBinding
 import tk.limt.demo.displayName
-import tt.tt.component.TTAdapter
-import tt.tt.component.TTHolder
-import tt.tt.component.TTOnClickListener
+import tt.base.component.TTAdapter
+import tt.base.component.TTHolder
+import tt.base.component.TTOnClickListener
 
 class ScanAdapter(
     private var clickListener: TTOnClickListener<ItemScanBinding, ScanResult>

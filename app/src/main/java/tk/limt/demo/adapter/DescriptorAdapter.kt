@@ -20,19 +20,18 @@ import android.bluetooth.BluetoothGattDescriptor
 import android.view.View
 import androidx.viewbinding.ViewBinding
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.disposables.Disposable
 import tk.limt.demo.R
 import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ItemDescriptorBinding
 import tk.limt.rxble.GattAttributes
 import tk.limt.utils.hex
-import tt.tt.component.TTAdapter
-import tt.tt.component.TTHolder
-import tt.tt.component.TTOnClickListener
-import tt.tt.rx.TTSingleObserver
-import tt.tt.utils.gone
-import tt.tt.utils.toast
-import tt.tt.utils.visible
+import tt.base.component.TTAdapter
+import tt.base.component.TTHolder
+import tt.base.component.TTOnClickListener
+import tt.base.rx.TTSingleObserver
+import tt.base.utils.gone
+import tt.base.utils.toast
+import tt.base.utils.visible
 
 class DescriptorAdapter(
     val address: String,

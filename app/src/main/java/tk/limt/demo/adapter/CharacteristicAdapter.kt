@@ -23,21 +23,20 @@ import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.viewbinding.ViewBinding
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.disposables.Disposable
 import tk.limt.demo.R
 import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ItemCharacteristicBinding
 import tk.limt.rxble.GattAttributes
 import tk.limt.utils.*
-import tt.tt.component.TTAdapter
-import tt.tt.component.TTHolder
-import tt.tt.component.TTOnClickListener
-import tt.tt.rx.TTCompletableObserver
-import tt.tt.rx.TTObserver
-import tt.tt.rx.TTSingleObserver
-import tt.tt.utils.gone
-import tt.tt.utils.toast
-import tt.tt.utils.visible
+import tt.base.component.TTAdapter
+import tt.base.component.TTHolder
+import tt.base.component.TTOnClickListener
+import tt.base.rx.TTCompletableObserver
+import tt.base.rx.TTObserver
+import tt.base.rx.TTSingleObserver
+import tt.base.utils.gone
+import tt.base.utils.toast
+import tt.base.utils.visible
 
 class CharacteristicAdapter(
     val address: String,
@@ -149,7 +148,7 @@ class CharacteristicAdapter(
     ) {
         AlertDialog.Builder(ctx).setTitle(R.string.write_value).setView(
             R.layout.dialog_send
-        ).setPositiveButton(tt.tt.R.string.tt_send) { dialog, which ->
+        ).setPositiveButton(tt.base.R.string.tt_send) { dialog, which ->
             val text = (dialog as AlertDialog).findViewById<EditText>(R.id.et_value)?.text?.trim()
             text?.hexToBytes()?.let {
                 ((if (it.size > manager.obtain(address).mtu) manager.obtain(address).writeWithQueue(
@@ -169,7 +168,7 @@ class CharacteristicAdapter(
                     }
                 })
             }
-        }.setNegativeButton(tt.tt.R.string.tt_cancel, null).show()
+        }.setNegativeButton(tt.base.R.string.tt_cancel, null).show()
     }
 
     private val propertiesMap = mapOf(

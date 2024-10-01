@@ -42,13 +42,13 @@ import tk.limt.demo.adapter.ScanAdapter
 import tk.limt.demo.data.DeviceManager
 import tk.limt.demo.databinding.ItemScanBinding
 import tk.limt.demo.databinding.RefreshRecyclerBinding
-import tt.tt.component.TTFragment
-import tt.tt.component.TTHolder
-import tt.tt.component.TTOnClickListener
-import tt.tt.rx.TTObserver
-import tt.tt.utils.isBluetoothEnabled
-import tt.tt.utils.isLocationEnabled
-import tt.tt.utils.permissionGranted
+import tt.base.component.TTFragment
+import tt.base.component.TTHolder
+import tt.base.component.TTOnClickListener
+import tt.base.rx.TTObserver
+import tt.base.utils.isBluetoothEnabled
+import tt.base.utils.isLocationEnabled
+import tt.base.utils.permissionGranted
 import java.util.concurrent.TimeUnit
 
 class ScanFragment : TTFragment<RefreshRecyclerBinding>(), SwipeRefreshLayout.OnRefreshListener,
