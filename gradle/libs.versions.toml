@@ -1,0 +1,24 @@
+[versions]
+agp = "8.9.2"
+kotlin = "2.0.21"
+coreKtx = "1.16.0"
+material = "1.13.0-alpha13"
+swiperefreshlayout = "1.2.0-beta01"
+ttbase = "1.1.4"
+rxandroid = "3.0.2"
+rxjava = "3.1.10"
+rxkotlin = "3.0.1"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
+ttbase = { module = "com.github.FerrandTian:TTBase", version.ref = "ttbase" }
+rxandroid = { module = "io.reactivex.rxjava3:rxandroid", version.ref = "rxandroid" }
+rxjava = { module = "io.reactivex.rxjava3:rxjava", version.ref = "rxjava" }
+rxkotlin = { module = "io.reactivex.rxjava3:rxkotlin", version.ref = "rxkotlin" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
