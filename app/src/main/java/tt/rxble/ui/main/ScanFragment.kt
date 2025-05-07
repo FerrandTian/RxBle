@@ -52,7 +52,7 @@ import tt.base.utils.permissionGranted
 import java.util.concurrent.TimeUnit
 
 class ScanFragment : TTFragment<RefreshRecyclerBinding>(), SwipeRefreshLayout.OnRefreshListener,
-    TTOnClickListener<ItemScanBinding, ScanResult>, SearchView.OnQueryTextListener {
+    TTOnClickListener<ItemScanBinding, BluetoothDevice>, SearchView.OnQueryTextListener {
     private val adapter: ScanAdapter = ScanAdapter(this)
     private val deviceManager = DeviceManager.instance
     private val launcherPermissions = registerForActivityResult(RequestMultiplePermissions()) {}
@@ -92,6 +92,7 @@ class ScanFragment : TTFragment<RefreshRecyclerBinding>(), SwipeRefreshLayout.On
                 override fun onSubscribe(d: Disposable) {
                     super.onSubscribe(d)
                     adapter.clear()
+                    adapter.bondedDevices = deviceManager.bondedDevices.toMutableList()
                 }
 
                 override fun onNext(t: ScanResult) {
@@ -101,9 +102,9 @@ class ScanFragment : TTFragment<RefreshRecyclerBinding>(), SwipeRefreshLayout.On
         } else vb.refresh.isRefreshing = false
     }
 
-    override fun onClick(v: View, h: TTHolder<ItemScanBinding>, t: ScanResult?) {
+    override fun onClick(v: View, h: TTHolder<ItemScanBinding>, t: BluetoothDevice?) {
         if (v == h.vb.connect) {
-            t?.let { (ctx as OnTabChangeListener<BluetoothDevice>).onTabChange(it.device, true) }
+            t?.let { (ctx as OnTabChangeListener<BluetoothDevice>).onTabChange(it, true) }
         }
     }
 

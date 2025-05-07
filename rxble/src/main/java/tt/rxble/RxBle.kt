@@ -59,9 +59,11 @@ class RxBle(
                 is BluetoothGattCharacteristic -> write(
                     triple.first as BluetoothGattCharacteristic, value, triple.third
                 )
+
                 is BluetoothGattDescriptor -> write(
                     triple.first as BluetoothGattDescriptor, value
                 )
+
                 else -> Completable.complete()
             }
         }.materialize<Pair<Parcelable, ByteArray>>().map {
@@ -84,6 +86,24 @@ class RxBle(
         writeDisposable?.dispose()
         writeDisposable = null
     }
+
+    /**
+     * Get the current connection state of device.
+     *
+     * @return State of the device connection. One of {@link BluetoothProfile#STATE_CONNECTED},
+     * {@link BluetoothProfile#STATE_CONNECTING}, {@link BluetoothProfile#STATE_DISCONNECTED},
+     * {@link BluetoothProfile#STATE_DISCONNECTING}
+     */
+    val connectionState: Int
+        get() = source.connectionState
+
+    /**
+     * Return true if the device is connected.
+     *
+     * @return true if the device is connected.
+     */
+    val isConnected: Boolean
+        get() = connectionState == BluetoothProfile.STATE_CONNECTED
 
     /**
      * Indicates when GATT client has connected/disconnected to/from a remote

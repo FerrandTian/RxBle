@@ -16,19 +16,28 @@
 
 package tt.rxble.adapter
 
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanResult
 import android.os.Build
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.viewbinding.ViewBinding
+import tt.rxble.databinding.ItemListTitleBinding
 import tt.rxble.databinding.ItemScanBinding
 import tt.rxble.displayName
+import tt.rxble.R
 import tt.base.component.TTAdapter
 import tt.base.component.TTHolder
 import tt.base.component.TTOnClickListener
+import tt.base.utils.gone
+import tt.base.utils.visible
 
 class ScanAdapter(
-    private var clickListener: TTOnClickListener<ItemScanBinding, ScanResult>
+    private var clickListener: TTOnClickListener<ItemScanBinding, BluetoothDevice>
 ) : TTAdapter<ItemScanBinding, ScanResult>() {
+    var bondedDevices = mutableListOf<BluetoothDevice>()
 
     var keyword: String? = null
         set(value) {
@@ -45,27 +54,68 @@ class ScanAdapter(
         }
     var list: MutableList<ScanResult> = items
 
+    override fun getItemViewType(position: Int): Int {
+        if (bondedDevices.isNotEmpty() && (position == 0 || position == (bondedDevices.size + 1))) {
+            return TTHolder.viewType(ItemListTitleBinding::class.java)
+        }
+        return super.getItemViewType(position)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TTHolder<ViewBinding> {
+        if (viewType == TTHolder.viewType(ItemListTitleBinding::class.java)) {
+            return TTHolder(ItemListTitleBinding.inflate(LayoutInflater.from(ctx), parent, false))
+        }
+        return super.onCreateViewHolder(parent, viewType)
+    }
+
+    @SuppressLint("MissingPermission")
     override fun onBindViewHolder(holder: TTHolder<ViewBinding>, position: Int) {
+        val resources = holder.itemView.resources
         if (holder.vb is ItemScanBinding) {
             val vb = holder.vb as ItemScanBinding
-            val item = list[position]
-            item.device?.let {
-                vb.tvAddress.text = it.address
+            if (bondedDevices.isNotEmpty() && position < (bondedDevices.size + 2)) {
+                val item = bondedDevices[position - 1]
+                vb.tvAddress.text = item.address
+                var name = item.name
+                if (name.isNullOrBlank() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    name = item.alias
+                }
+                if (name.isNullOrBlank()) name = resources.getString(R.string.n_a)
+                vb.tvName.text = name
+                gone(vb.tvRssi)
+                setClickListener(
+                    clickListener, holder as TTHolder<ItemScanBinding>, item,
+                    holder.itemView, vb.connect
+                )
+            } else {
+                var pos = getRealPosition(position, true)
+                val item = list[pos]
+                item.device?.let {
+                    vb.tvAddress.text = it.address
+                }
+                vb.tvName.text = item.displayName ?: resources.getString(R.string.n_a)
+                vb.tvRssi.text = resources.getString(R.string.dbm, item.rssi)
+                visible(vb.tvRssi)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vb.connect.visibility = if (item.isConnectable) View.VISIBLE else View.GONE
+                }
+                setClickListener(
+                    clickListener, holder as TTHolder<ItemScanBinding>, item.device,
+                    holder.itemView, vb.connect
+                )
             }
-            vb.tvName.text = item.displayName ?: "N/A"
-            vb.tvRssi.text = "${item.rssi} dBm"
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vb.connect.visibility = if (item.isConnectable) View.VISIBLE else View.GONE
+        } else if (holder.vb is ItemListTitleBinding) {
+            val vb = holder.vb as ItemListTitleBinding
+            if (position == 0) {
+                vb.tvTitle.text = resources.getString(R.string.bonded_devices)
+            } else {
+                vb.tvTitle.text = resources.getString(R.string.available_devices)
             }
-            setClickListener(
-                clickListener, holder as TTHolder<ItemScanBinding>, item,
-                holder.itemView, vb.connect
-            )
         }
     }
 
     override fun put(t: ScanResult): Boolean {
-        val index = items.deviceIndexOf(t)
+        var index = items.deviceIndexOf(t)
         if (index >= 0) items[index] = t else items.add(t)
         if (keyword?.isNotEmpty() == true) {
             keyword?.let { key ->
@@ -74,7 +124,7 @@ class ScanAdapter(
                     val position = list.deviceIndexOf(t)
                     if (position >= 0) {
                         list[position] = t
-                        notifyItemChanged(position)
+                        notifyItemChanged(getRealPosition(position))
                     } else {
                         list.add(t)
                         notifyItemInserted(itemCount - 1)
@@ -82,13 +132,20 @@ class ScanAdapter(
                 }
             }
         } else {
-            if (index >= 0) notifyItemChanged(index) else notifyItemInserted(list.size - 1)
+            if (index >= 0) {
+                notifyItemChanged(getRealPosition(index))
+            } else notifyItemInserted(itemCount - 1)
         }
         return true
     }
 
-    override fun getItemCount(): Int {
-        return list.size
+    override fun getItemCount() = getRealPosition(list.size)
+
+    private fun getRealPosition(position: Int, reverse: Boolean = false): Int {
+        if (bondedDevices.isNotEmpty()) {
+            return if (reverse) position - bondedDevices.size - 2 else position + bondedDevices.size + 2
+        }
+        return position
     }
 
     private fun List<ScanResult>.deviceIndexOf(element: ScanResult): Int {
@@ -97,9 +154,10 @@ class ScanAdapter(
     }
 
     override fun clear() {
-        val itemCount = list.size
+        val count = itemCount
+        bondedDevices.clear()
         list.clear()
-        notifyItemRangeRemoved(0, itemCount)
         items.clear()
+        notifyItemRangeRemoved(0, count)
     }
 }

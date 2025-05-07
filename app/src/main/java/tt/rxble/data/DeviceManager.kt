@@ -30,18 +30,21 @@ class DeviceManager(var ctx: Context) {
     private val bleManager = RxBleManager(ctx)
     private var bleMap: MutableMap<String, RxBle> = HashMap()
 
+    val bondedDevices: Set<BluetoothDevice>
+        get() = bleManager.adapter.bondedDevices
+
     fun scan(filters: List<ScanFilter>?, settings: ScanSettings?) =
         bleManager.scan(filters, settings)
-
-    fun getConnectionState(device: BluetoothDevice) = bleManager.getConnectionState(device)
-
-    fun isConnected(device: BluetoothDevice) = bleManager.isConnected(device)
 
     fun obtain(address: String) = bleMap[address] ?: bleManager.create(
         address, false
     ).also {
         bleMap[address] = it
     }
+
+    fun getConnectionState(device: BluetoothDevice) = obtain(device.address).connectionState
+
+    fun isConnected(device: BluetoothDevice) = obtain(device.address).isConnected
 
     fun close(address: String) = bleMap.remove(address)?.close()
 

@@ -31,4 +31,8 @@
     <string name="extended_props">Extended Props</string>
     <string name="unknown_descriptor">Unknown Descriptor</string>
     <string name="write_value">Write value</string>
+    <string name="dbm">%d dBm</string>
+    <string name="n_a">N/A</string>
+    <string name="available_devices">Available Devices</string>
+    <string name="bonded_devices">Bonded Devices</string>
 </resources>

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:JvmName("RxTools")
+
 package tt.rxble
 
 import android.bluetooth.BluetoothGattCharacteristic

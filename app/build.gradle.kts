@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "tt.rxble"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "tt.rxble"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 110
-        versionName = "1.1.0"
+        targetSdk = 36
+        versionCode = 111
+        versionName = "1.1.1"
     }
 
     buildTypes {

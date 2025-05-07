@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:JvmName("Tools")
+
 package tt.rxble
 
 import android.bluetooth.le.ScanResult

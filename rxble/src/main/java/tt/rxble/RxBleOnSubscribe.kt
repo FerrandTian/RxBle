@@ -36,6 +36,8 @@ internal class RxBleOnSubscribe(
             requireNotNull(realGatt) { "GATT client has not been established or has been closed" }
             return realGatt!!
         }
+    var connectionState: Int = BluetoothProfile.STATE_DISCONNECTED
+        private set
     var mtu: Int = 20
         private set
 
@@ -67,6 +69,7 @@ internal class RxBleOnSubscribe(
     }
 
     override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+        this.connectionState = newState
         emitter?.onNext(RxGatt.ConnectionStateChange(gatt, status, newState))
     }
 

@@ -27,7 +27,7 @@
         android:id="@+id/tv_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="N/A"
+        android:text="@string/n_a"
         android:textAppearance="?attr/textAppearanceListItem"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -51,7 +51,7 @@
         app:drawableStartCompat="@drawable/ic_signal_cellular_4_bar_16"
         app:layout_constraintBaseline_toBaselineOf="@id/tv_address"
         app:layout_constraintStart_toEndOf="@id/tv_address"
-        tools:text="-100 dBm" />
+        tools:text="@string/dbm" />
 
     <Button
         android:id="@+id/connect"
