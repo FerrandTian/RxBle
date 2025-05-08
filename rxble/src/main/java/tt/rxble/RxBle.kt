@@ -288,7 +288,6 @@ class RxBle(
         Completable.complete()
     }.mergeWith(Completable.fromAction {
         characteristic.value = value
-        characteristic.writeType = writeType
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) source.gatt.writeCharacteristic(
             characteristic, value, writeType
         ).also {

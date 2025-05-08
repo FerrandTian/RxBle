@@ -108,7 +108,7 @@ class CharacteristicAdapter(
                 vb.ivRead
             )
             gone(
-                item.isPropertySupported(BluetoothGattCharacteristic.PROPERTY_WRITE),
+                item.isPropertySupported(BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE),
                 vb.ivWrite
             )
             if (item.isNotificationSupported) {
